@@ -1,0 +1,3 @@
+[submodule "critterapi"]
+	path = critterapi
+	url = https://github.com/boxcrittersmods/critterapi.git
