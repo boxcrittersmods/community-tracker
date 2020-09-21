@@ -8,7 +8,7 @@ const apt = new CritterAPI();
 var playerIds = {};
 
 client.on('ready', () => {
-	client.user.setPresence({ game: { name: 'BoxCritters', type: "PLAYING", }, status: 'online' });
+	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
 	console.log(`Logged in as ${client.user.tag}!`);
 });
 
@@ -55,19 +55,19 @@ function lookUp(url,cb) {
 
 
 var commands = {
-	"ping":{args:[],description:"test command",call: function (message, args) {
-		message.channel.send("yay");
+	"ping":{args:[],description:"Test command",call: function (message, args) {
+		message.channel.send("yay!");
 	}},
-	"echo": {args:["message"],description:"says what you say",call:function (message, args) {
+	"echo": {args:["message"],description:"Says what you say",call:function (message, args) {
 		message.channel.send(args.join(" "))
 	}},
-	"invite":{args:[],description:"share the bot",call:function(message,args) {
+	"invite":{args:[],description:"Share the bot",call:function(message,args) {
 		message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 	}},
-	"help":{args:[],description:"lists help commands",call:function(message,args) {
+	"help":{args:[],description:"Lists help commands",call:function(message,args) {
 		message.channel.send("Commands: ```"+Object.keys(commands).map(c=>"!bc " + c + " " + commands[c].args.map(a=>"["+a+"]").join(" ") + " - " + commands[c].description).join("\n")+"```Want specific help?: https://discord.gg/D2ZpRUW");
 	}},
-	"lookup":{args:["username"],description:"look at people",call:function(message,args){
+	"lookup":{args:["username"],description:"look up critters",call:function(message,args){
 		//message.channel.send("is that you " + message.author + " I know thats you. Well this command hasn't been made yet")
 
 		var nickname = args.join(" ");
@@ -75,13 +75,13 @@ var commands = {
 
 		lookUp("https://boxcritters.com/data/player/"+id,(err,res,body) =>{
 			if(err) {
-				message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database.")
+				message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.")
 				return;
 			}
 			try {
 				var data = JSON.parse(body);
 			} catch(e) {
-				message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database.")
+				message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.")
 				return
 			}
 			if(!playerIds[data.nickname]) {
@@ -91,7 +91,7 @@ var commands = {
 			message.channel.send(lookNice(data));
 		});
 	}},
-	"dictionary":{args:[],description:"i kow things",call:function(message,args) {
+	"dictionary":{args:[],description:"Lists the playerIds and the respective nicknames of all known players.",call:function(message,args) {
 		message.channel.send("```json\n"+JSON.stringify(playerIds)+"```")
 	}}
 }
@@ -101,7 +101,7 @@ function parseCommand(message) {
 	parts.shift();
 	var cmd = parts.shift();
 	if(!commands[cmd]){
-		console.log("Invalic command " + cmd);
+		console.log("Invalid command " + cmd);
 		return; 
 	}
 	commands[cmd].call(message, parts)
