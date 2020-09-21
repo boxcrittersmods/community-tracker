@@ -1,7 +1,6 @@
 {
-  "name": "wwtbamdiscordbot",
+  "name": "bcmc-community-tracker",
   "version": "1.0.0",
-  "description": "whowantstobeamillionare",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,17 +8,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tumble1999/wwtbamDiscordBot.git"
+    "url": "git+https://github.com/boxcrittersmods/community-tracker.git"
   },
   "author": "tumble1999",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tumble1999/wwtbamDiscordBot/issues"
+    "url": "https://github.com/boxcrittersmods/community-tracker/issues"
   },
-  "homepage": "https://github.com/tumble1999/wwtbamDiscordBot#readme",
+  "homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
   "dependencies": {
     "discord.js": "^11.3.2",
-    "discord.js-commando": "^0.10.0",
     "jsdom": "^16.4.0",
     "path": "^0.12.7",
     "request": "^2.86.0",
