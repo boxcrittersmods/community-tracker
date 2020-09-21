@@ -26,7 +26,7 @@ async function getItemName(itemId) {
 }
 async function getWikiUrl(itemId) {
 	var itemName = wikiPages[itemId] || await getItemName(itemId);
-	if(!itemName) return;
+	if (!itemName) return;
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
@@ -61,9 +61,9 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				data[key] =  await Promise.all(data[key].map(async i => {
+				data[key] = await Promise.all(data[key].map(async i => {
 					var wikiUrl = await getWikiUrl(i);
-					return wikiUrl?`[${i}](${wikiUrl})`:i
+					return wikiUrl ? `[${i}](${wikiUrl})` : i
 				}));
 				data[key] = data[key].join("\n");
 				field(key);
@@ -125,25 +125,29 @@ var commands = {
 				}
 				message.channel.send(await lookNice(data));
 			});
-		},
-		"room":function name(args) {
-			var roomId = args[0]
-			roomList.getJson().then(rooms=>{
-				var room = rooms.find(r=>r.roomId==roomId);
-				message.channel.send(await lookNice(room));
-			});
-		},
-		"item":function name(args) {
-			var itemId = args[0]
-			itemList.getJson().then(items=>{
-				var item = items.find(r=>r.itemId==itemId);
-				message.channel.send(await lookNice(item));
-			});
 		}
 	},
 	"dictionary": {
 		args: [], description: "Lists the playerIds and the respective nicknames of all known players.", call: function (message, args) {
 			message.channel.send("```json\n" + JSON.stringify(playerIds) + "```")
+		}
+	},
+	"room": {
+		args: ["roomId"], description: "Look up Rooms", call: function name(args) {
+			var roomId = args[0]
+			roomList.getJson().then(rooms => {
+				var room = rooms.find(r => r.roomId == roomId);
+				message.channel.send(await lookNice(room));
+			});
+		}
+	},
+	"item": {
+		args: [itemId], description: "Look up Items", call: function name(args) {
+			var itemId = args[0]
+			itemList.getJson().then(items => {
+				var item = items.find(r => r.itemId == itemId);
+				message.channel.send(await lookNice(item));
+			});
 		}
 	}
 }
