@@ -57,10 +57,10 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				data[key] = data[key].map(i => {
+				data[key] =  Promise.all(data[key].map(async i => {
 					var wikiUrl = await getWikiUrl(i);
 					return `[${i}](${wikiUrl})`
-				}).join("\n");
+				})).join("\n");
 				field(key);
 				break;
 			default:
