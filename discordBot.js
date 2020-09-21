@@ -3,6 +3,8 @@ const path = require('path');
 const request = require("request");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
+const wikiPages = require("./wikiPages.json");
+
 const client = new Discord.Client();
 //const apt = new CritterAPI();
 var playerIds = JSON.parse(process.env.DICTIONARY)||{};
@@ -11,6 +13,10 @@ client.on('ready', () => {
 	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
 	console.log(`Logged in as ${client.user.tag}!`);
 });
+
+function getWikiUrl(itemId) {
+	return "https://box-critters.fandom.com/wiki/" + wikiPages[itemId]||itemId
+}
 
 
 function lookNice(data) {
@@ -32,8 +38,12 @@ function lookNice(data) {
 				data[key] = data[key]||"hamster";
 				field(key);
 			break;
+			case "created":
+				data[key] = new Date(data[key]);
+				field(key);
+				break;
 			case "gear":
-				data[key] = data[key].join("\n");
+				data[key] = data[key].map(i=>`[i](${getWikiUrl(i)})`).join("\n");
 				field(key);
 				break;
 			default:
