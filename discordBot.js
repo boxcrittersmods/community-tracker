@@ -68,7 +68,7 @@ async function lookNice(data) {
 	return { embed };
 }
 
-async function lookUp(url, cb) {
+function lookUp(url, cb) {
 	return Website.Connect(url).getText();
 }
 
