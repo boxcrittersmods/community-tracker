@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const { type } = require("os");
 const path = require('path');
 const request = require("request");
 //const CritterAPI = require("./critterapi/critterapi.js")
@@ -28,7 +29,8 @@ function lookNice(data) {
 		}
 		embed.fields.push({
 			name:key,
-			value:data[key].toString()||"N/A"
+			value:data[key].toString()||"N/A",
+			inline:typeof(data[key])=="boolean"
 		});
 	}
 
