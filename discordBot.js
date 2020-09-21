@@ -34,13 +34,14 @@ async function lookNice(data) {
 		color: 0x55cc11, fields: []
 	};
 	function field(key) {
-		if (typeof (data[key]) == "boolean") {
+		var boolean = typeof (data[key]) == "boolean"
+		if (boolean) {
 			data[key] = data[key] ? "✅" : "❌";
 		}
 		embed.fields.push({
 			name: key,
 			value: data[key].toString() || "N/A",
-			inline: typeof (data[key]) == "boolean"
+			inline: boolean
 		});
 	}
 
