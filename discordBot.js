@@ -25,6 +25,7 @@ async function getItemName(itemId) {
 }
 async function getWikiUrl(itemId) {
 	var itemName = wikiPages[itemId] || await getItemName(itemId);
+	if(!itemName) return;
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
@@ -61,7 +62,7 @@ async function lookNice(data) {
 			case "gear":
 				data[key] =  await Promise.all(data[key].map(async i => {
 					var wikiUrl = await getWikiUrl(i);
-					return `[${i}](${wikiUrl})`
+					return wikiUrl?`[${i}](${wikiUrl})`:i
 				}));
 				data[key] = data[key].join("\n");
 				field(key);
