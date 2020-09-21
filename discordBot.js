@@ -67,8 +67,8 @@ var commands = {
 	"help":{args:[],description:"Lists help commands",call:function(message,args) {
 		message.channel.send("Commands: ```"+Object.keys(commands).map(c=>"!bc " + c + " " + commands[c].args.map(a=>"["+a+"]").join(" ") + " - " + commands[c].description).join("\n")+"```Want specific help?: https://discord.gg/D2ZpRUW");
 	}},
-	"lookup":{args:["username"],description:"look up critters",call:function(message,args){
-		//message.channel.send("is that you " + message.author + " I know thats you. Well this command hasn't been made yet")
+	"lookup":{args:["username"],description:"Look up players",call:function(message,args){
+		//message.channel.send("Is that you " + message.author + "? I know thats you. Well, this command hasn't been made yet.")
 
 		var nickname = args.join(" ");
 		var id = playerIds[nickname]||nickname;
@@ -86,7 +86,7 @@ var commands = {
 			}
 			if(!playerIds[data.nickname]) {
 				playerIds[data.nickname] = id;
-				message.channel.send(data.nickname + " has been saved to the dictionary as " + id);
+				message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
 			}
 			message.channel.send(lookNice(data));
 		});
