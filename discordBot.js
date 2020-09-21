@@ -1,10 +1,10 @@
 const Discord = require("discord.js");
 const path = require('path');
 const request = require("request");
-const CritterAPI = require("./critterapi/critterapi.js")
+//const CritterAPI = require("./critterapi/critterapi.js")
 
 const client = new Discord.Client();
-const apt = new CritterAPI();
+//const apt = new CritterAPI();
 var playerIds = {};
 
 client.on('ready', () => {
@@ -15,7 +15,7 @@ client.on('ready', () => {
 
 function lookNice(data) {
 	var embed = {
-		color: 0x0099ff,fields:[]};
+		color: 0x55cc11,fields:[]};
 	function field(key) {
 		embed.fields.push({
 			name:key,
@@ -73,15 +73,19 @@ var commands = {
 		var nickname = args.join(" ");
 		var id = playerIds[nickname]||nickname;
 
+		function invalidError() {
+			message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database\nTo look up your own id type `world.player.playerId` into the developer console.")
+		}
+
 		lookUp("https://boxcritters.com/data/player/"+id,(err,res,body) =>{
 			if(err) {
-				message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database.")
+				invalidError()
 				return;
 			}
 			try {
 				var data = JSON.parse(body);
 			} catch(e) {
-				message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database.")
+				invalidError();
 				return
 			}
 			if(!playerIds[data.nickname]) {
