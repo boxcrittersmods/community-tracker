@@ -10,7 +10,7 @@ const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.j
 
 const client = new Discord.Client();
 //const apt = new CritterAPI();
-var playerIds = JSON.parse(process.env.DICTIONARY) || {};
+var playerIds = JSON.parse(process.env.DICTIONARY||"{}");
 
 client.on('ready', () => {
 	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
@@ -57,7 +57,8 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				data[key] = data[key].map(i => `[${i}](${await getWikiUrl(i)})`).join("\n");
+				var wikiUrl = await getWikiUrl(i);
+				data[key] = data[key].map(i => `[${i}](${wikiUrl})`).join("\n");
 				field(key);
 				break;
 			default:
