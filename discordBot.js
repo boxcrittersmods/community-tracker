@@ -142,7 +142,7 @@ var commands = {
 		}
 	},
 	"item": {
-		args: [itemId], description: "Look up Items", call: function name(args) {
+		args: ["itemId"], description: "Look up Items", call: function name(args) {
 			var itemId = args[0]
 			itemList.getJson().then(async items => {
 				var item = items.find(r => r.itemId == itemId);
