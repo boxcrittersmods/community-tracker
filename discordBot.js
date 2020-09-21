@@ -62,7 +62,8 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "created":
-				data[key] = new Date(data[key]);
+			case "lastSeen":
+				data[key] = new Date(data[key]).toDateString();
 				field(key);
 				break;
 			case "gear":
@@ -181,7 +182,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.startsWith('!bc')) {
+	if (message.content.startsWith('!test')) {
 		parseCommand(message);
 	}
 });
