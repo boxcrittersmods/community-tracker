@@ -20,7 +20,7 @@ client.on('ready', () => {
 
 async function getItemName(itemId) {
 	var items = await itemList.getJson();
-	var item = items.filter(i => i.itemId == itemId)
+	var item = items.find(i => i.itemId == itemId)
 	return item.name;
 }
 async function getWikiUrl(itemId) {
