@@ -43,7 +43,7 @@ function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				data[key] = data[key].map(i=>`[i](${getWikiUrl(i)})`).join("\n");
+				data[key] = data[key].map(i=>`[${i}](${getWikiUrl(i)})`).join("\n");
 				field(key);
 				break;
 			default:
