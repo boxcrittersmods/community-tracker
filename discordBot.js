@@ -182,7 +182,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.startsWith('!test')) {
+	if (message.content.startsWith('!bc')) {
 		parseCommand(message);
 	}
 });
