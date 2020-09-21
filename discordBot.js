@@ -5,7 +5,7 @@ const request = require("request");
 
 const client = new Discord.Client();
 //const apt = new CritterAPI();
-var playerIds = {};
+var playerIds = JSON.parse(process.env.DICTIONARY)||{};
 
 client.on('ready', () => {
 	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
