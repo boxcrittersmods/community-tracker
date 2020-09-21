@@ -152,6 +152,10 @@ var commands = {
 			var roomId = args[0]
 			roomList.getJson().then(async rooms => {
 				var room = rooms.find(r => r.roomId == roomId);
+				if(!room) {
+					message.channel.send("Invalid Room");
+					return;
+				}
 				message.channel.send(await lookNice(room));
 			});
 		}
@@ -161,6 +165,10 @@ var commands = {
 			var itemId = args[0]
 			itemList.getJson().then(async items => {
 				var item = items.find(r => r.itemId == itemId);
+				if(!item) {
+					message.channel.send("Invalid Item");
+					return;
+				}
 				message.channel.send(await lookNice(item));
 			});
 		}
