@@ -2,9 +2,11 @@ const Discord = require("discord.js");
 const { type } = require("os");
 const path = require('path');
 const request = require("request");
+const Website = require("./website");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 const wikiPages = require("./wikiPages.json");
+const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 
 const client = new Discord.Client();
 //const apt = new CritterAPI();
@@ -15,12 +17,18 @@ client.on('ready', () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 });
 
-function getWikiUrl(itemId) {
-	return "https://box-critters.fandom.com/wiki/" + wikiPages[itemId]||itemId
+
+async function getItemName(itemId) {
+	var items = await itemList.getJson();
+	var item = items.filter(i=>i.itemId==itemId)
+	return item.name;
+}
+async function getWikiUrl(itemId) {
+	return "https://box-critters.fandom.com/wiki/" + wikiPages[itemId]||await getItemName(itemId);
 }
 
 
-function lookNice(data) {
+async function lookNice(data) {
 	var embed = {
 		color: 0x55cc11,fields:[]};
 	function field(key) {
@@ -48,7 +56,7 @@ function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				data[key] = data[key].map(i=>`[${i}](${getWikiUrl(i)})`).join("\n");
+				data[key] = data[key].map(i=>`[${i}](${await getWikiUrl(i)})`).join("\n");
 				field(key);
 				break;
 			default:
@@ -59,15 +67,9 @@ function lookNice(data) {
 	return {embed};
 }
 
-function test(cb) {
-	request({ url: "https://boxcritters.com/data/player/EF99F6E35EDA62C", method: 'GET', headers: { 'Accept': 'application/json', 'Accept-Charset': 'utf-8', 'User-Agent': 'Node-Request' } }, cb)
+async function lookUp(url,cb) {
+	return Website.Connect(url).getText();
 }
-
-function lookUp(url,cb) {
-	request({ url, method: 'GET', headers: { 'Accept': 'application/json', 'Accept-Charset': 'utf-8', 'User-Agent': 'Node-Request' } }, cb)
-}
-
-
 
 var commands = {
 	"ping":{args:[],description:"Test command",call: function (message, args) {
@@ -92,23 +94,18 @@ var commands = {
 			message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type `world.player.playerId` into the developer console.")
 		}
 
-		lookUp("https://boxcritters.com/data/player/"+id,(err,res,body) =>{
-			if(err) {
-				invalidError()
-				return;
-			}
-			try {
-				var data = JSON.parse(body);
-			} catch(e) {
-				invalidError();
-				return
-			}
-			if(!playerIds[data.nickname]) {
-				playerIds[data.nickname] = id;
-				message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
-			}
-			message.channel.send(lookNice(data));
-		});
+		var body = await lookUp("https://boxcritters.com/data/player/"+id)
+		try {
+			var data = JSON.parse(body);
+		} catch(e) {
+			invalidError();
+			return
+		}
+		if(!playerIds[data.nickname]) {
+			playerIds[data.nickname] = id;
+			message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
+		}
+		message.channel.send(await lookNice(data));
 	}},
 	"dictionary":{args:[],description:"Lists the playerIds and the respective nicknames of all known players.",call:function(message,args) {
 		message.channel.send("```json\n"+JSON.stringify(playerIds)+"```")
