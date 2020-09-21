@@ -8,7 +8,7 @@ const apt = new CritterAPI();
 var playerIds = {};
 
 client.on('ready', () => {
-	client.user.setPresence({ game: { name: 'the love P1 back game', type: "PLAYING", }, status: 'online' });
+	client.user.setPresence({ game: { name: 'BoxCritters', type: "PLAYING", }, status: 'online' });
 	console.log(`Logged in as ${client.user.tag}!`);
 });
 
@@ -53,7 +53,7 @@ var commands = {
 		message.channel.send(args.join(" "))
 	}},
 	"invite":{args:[],description:"share the bot",call:function(message,args) {
-		message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot");
+		message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 	}},
 	"help":{args:[],description:"lists help commands",call:function(message,args) {
 		message.channel.send("Commands: ```"+Object.keys(commands).map(c=>"!bc " + c + " " + commands[c].args.map(a=>"["+a+"]").join(" ") + " - " + commands[c].description).join("\n")+"```Want specific help?: https://discord.gg/D2ZpRUW");
@@ -77,7 +77,7 @@ var commands = {
 			}
 			if(!playerIds[data.nickname]) {
 				playerIds[data.nickname] = id;
-				message.channel.send(data.nickname + " has been saved to the dectionary as " + id);
+				message.channel.send(data.nickname + " has been saved to the dictionary as " + id);
 			}
 			message.channel.send(lookNice(data));
 		});
