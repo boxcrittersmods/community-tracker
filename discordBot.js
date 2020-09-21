@@ -3,6 +3,7 @@ const { type } = require("os");
 const path = require('path');
 const request = require("request");
 const Website = require("./website");
+var Jimp = require('jimp');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 const wikiPages = require("./wikiPages.json");
@@ -50,6 +51,7 @@ async function lookNice(data) {
 	}
 
 	for (const key in data) {
+		if(typeof(data[key]) == "object") continue;
 		switch (key) {
 			case "name":
 			case "nickname":
@@ -70,6 +72,15 @@ async function lookNice(data) {
 				}));
 				data[key] = data[key].join("\n");
 				field(key);
+				break;
+			case "icon":
+				embed.thumbnail = {};
+				embed.thumbnail.url = data[key];
+				break;
+			case "background":
+			case "sprites":
+				embed.image = {};
+				embed.image.url = data[key];
 				break;
 			default:
 				field(key)
