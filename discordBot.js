@@ -1,9 +1,6 @@
 const Discord = require("discord.js");
-const { type } = require("os");
-const path = require('path');
-const request = require("request");
 const Website = require("./website");
-var Jimp = require('jimp');
+var db = require("./db");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 const wikiPages = require("./wikiPages.json");
@@ -12,7 +9,6 @@ const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.j
 
 const client = new Discord.Client();
 //const apt = new CritterAPI();
-var playerIds = JSON.parse(process.env.DICTIONARY || "{}");
 
 client.on('ready', () => {
 	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
@@ -51,7 +47,7 @@ async function lookNice(data) {
 	}
 
 	for (const key in data) {
-		if(typeof(data[key]) == "object") continue;
+		//if(typeof(data[key]) == "object") continue;
 		switch (key) {
 			case "name":
 			case "nickname":
@@ -91,37 +87,37 @@ async function lookNice(data) {
 	return { embed };
 }
 
-function lookUp(url, cb) {
+function lookUp(url) {
 	return Website.Connect(url).getText();
 }
 
 var commands = {
 	"ping": {
-		args: [], description: "Test command", call: function (message, args) {
+		args: [], description: "Test command", call: async function (message, args) {
 			message.channel.send("yay!");
 		}
 	},
 	"echo": {
-		args: ["message"], description: "Says what you say", call: function (message, args) {
+		args: ["message"], description: "Says what you say", call: async function (message, args) {
 			message.channel.send(args.join(" "))
 		}
 	},
 	"invite": {
-		args: [], description: "Share the bot", call: function (message, args) {
+		args: [], description: "Share the bot", call: async function (message, args) {
 			message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 		}
 	},
 	"help": {
-		args: [], description: "Lists help commands", call: function (message, args) {
+		args: [], description: "Lists help commands", call: async function (message, args) {
 			message.channel.send("Commands: ```" + Object.keys(commands).map(c => "!bc " + c + " " + commands[c].args.map(a => "[" + a + "]").join(" ") + " - " + commands[c].description).join("\n") + "```Want specific help?: https://discord.gg/D2ZpRUW");
 		}
 	},
 	"lookup": {
-		args: ["username"], description: "Look up players", call: function (message, args) {
+		args: ["username"], description: "Look up players", call: async function (message, args) {
 			//message.channel.send("Is that you " + message.author + "? I know thats you. Well, this command hasn't been made yet.")
 
 			var nickname = args.join(" ");
-			var id = playerIds[nickname] || nickname;
+			var id = await db.get(nickname)||nickname;
 
 			function invalidError() {
 				message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type `world.player.playerId` into the developer console.")
@@ -134,8 +130,8 @@ var commands = {
 					invalidError();
 					return
 				}
-				if (!playerIds[data.nickname]) {
-					playerIds[data.nickname] = id;
+				if (!await db.get(data.nickname)) {
+					await db.add(id,data.nickname);
 					message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
 				}
 				message.channel.send(await lookNice(data));
@@ -143,12 +139,12 @@ var commands = {
 		}
 	},
 	"dictionary": {
-		args: [], description: "Lists the playerIds and the respective nicknames of all known players.", call: function (message, args) {
+		args: [], description: "Lists the playerIds and the respective nicknames of all known players.", call:async  function (message, args) {
 			message.channel.send("```json\n" + JSON.stringify(playerIds) + "```")
 		}
 	},
 	"room": {
-		args: ["roomId"], description: "Look up Rooms", call: function name(message,args) {
+		args: ["roomId"], description: "Look up Rooms", call: async function name(message,args) {
 			var roomId = args[0]
 			roomList.getJson().then(async rooms => {
 				var room = rooms.find(r => r.roomId == roomId);
@@ -161,7 +157,7 @@ var commands = {
 		}
 	},
 	"item": {
-		args: ["itemId"], description: "Look up Items", call: function name(message,args) {
+		args: ["itemId"], description: "Look up Items", call: async function name(message,args) {
 			var itemId = args[0]
 			itemList.getJson().then(async items => {
 				var item = items.find(r => r.itemId == itemId);
@@ -175,7 +171,7 @@ var commands = {
 	}
 }
 
-function parseCommand(message) {
+async function parseCommand(message) {
 	var parts = message.content.split(" ")
 	parts.shift();
 	var cmd = parts.shift();
@@ -183,7 +179,7 @@ function parseCommand(message) {
 		console.log("Invalid command " + cmd);
 		return;
 	}
-	commands[cmd].call(message, parts)
+	await commands[cmd].call(message, parts)
 }
 
 client.on('message', message => {
@@ -191,7 +187,7 @@ client.on('message', message => {
 		return;
 	}
 	if (message.content.startsWith('!bc')) {
-		parseCommand(message);
+		parseCommand(message).catch(message.channel.send);
 	}
 });
 
