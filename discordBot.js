@@ -74,7 +74,7 @@ var commands = {
 		var id = playerIds[nickname]||nickname;
 
 		function invalidError() {
-			message.channel.send("Invalid playerId or username. Please look up a playerId to add its username to the database\nTo look up your own id type `world.player.playerId` into the developer console.")
+			message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type `world.player.playerId` into the developer console.")
 		}
 
 		lookUp("https://boxcritters.com/data/player/"+id,(err,res,body) =>{
