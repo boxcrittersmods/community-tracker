@@ -16,6 +16,12 @@ client.on('ready', () => {
 function lookNice(data) {
 	var embed = {
 		color: 0x0099ff,fields:[]};
+	function field(key) {
+		embed.fields.push({
+			name:key,
+			value:data[key].toString()||"N/A"
+		});
+	}
 
 	for (const key in data) {
 		switch (key) {
@@ -24,11 +30,14 @@ function lookNice(data) {
 			break;
 			case "critterId":
 				data[key] = data[key]||"hamster";
+				field(key);
+			break;
+			case "gear":
+				data[key] = data[key].join("\n");
+				field(key);
+				break;
 			default:
-				embed.fields.push({
-					name:key,
-					value:data[key].toString()||"N/A"
-				});
+				field(key)
 				break;
 		}
 	}
