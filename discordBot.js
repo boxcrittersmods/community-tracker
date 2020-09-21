@@ -135,7 +135,7 @@ var commands = {
 	"room": {
 		args: ["roomId"], description: "Look up Rooms", call: function name(args) {
 			var roomId = args[0]
-			roomList.getJson().then(rooms => {
+			roomList.getJson().then(async rooms => {
 				var room = rooms.find(r => r.roomId == roomId);
 				message.channel.send(await lookNice(room));
 			});
@@ -144,7 +144,7 @@ var commands = {
 	"item": {
 		args: [itemId], description: "Look up Items", call: function name(args) {
 			var itemId = args[0]
-			itemList.getJson().then(items => {
+			itemList.getJson().then(async items => {
 				var item = items.find(r => r.itemId == itemId);
 				message.channel.send(await lookNice(item));
 			});
