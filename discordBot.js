@@ -36,19 +36,22 @@ async function lookNice(data) {
 		color: 0x55cc11, fields: []
 	};
 	function field(key) {
-		var boolean = typeof (data[key]) == "boolean"
+		if(!data[key]) return;
+		var type = typeof(data[key]);
+		var boolean = type == "boolean"
 		if (boolean) {
 			data[key] = data[key] ? "✅" : "❌";
 		}
 		embed.fields.push({
 			name: key,
 			value: data[key].toString() || "N/A",
-			inline: boolean
+			inline: ["boolean","number"].includes(type)
 		});
 	}
 
 	for (const key in data) {
 		switch (key) {
+			case "name":
 			case "nickname":
 				embed.title = data[key];
 				break;
@@ -133,7 +136,7 @@ var commands = {
 		}
 	},
 	"room": {
-		args: ["roomId"], description: "Look up Rooms", call: function name(args) {
+		args: ["roomId"], description: "Look up Rooms", call: function name(message,args) {
 			var roomId = args[0]
 			roomList.getJson().then(async rooms => {
 				var room = rooms.find(r => r.roomId == roomId);
@@ -142,7 +145,7 @@ var commands = {
 		}
 	},
 	"item": {
-		args: ["itemId"], description: "Look up Items", call: function name(args) {
+		args: ["itemId"], description: "Look up Items", call: function name(message,args) {
 			var itemId = args[0]
 			itemList.getJson().then(async items => {
 				var item = items.find(r => r.itemId == itemId);
