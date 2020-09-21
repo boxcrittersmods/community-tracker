@@ -7,6 +7,7 @@ const Website = require("./website");
 
 const wikiPages = require("./wikiPages.json");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
+const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
 const client = new Discord.Client();
 //const apt = new CritterAPI();
@@ -123,6 +124,20 @@ var commands = {
 					message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
 				}
 				message.channel.send(await lookNice(data));
+			});
+		},
+		"room":function name(args) {
+			var roomId = args[0]
+			roomList.getJson().then(rooms=>{
+				var room = rooms.find(r=>r.roomId==roomId);
+				message.channel.send(await lookNice(room));
+			});
+		},
+		"item":function name(args) {
+			var itemId = args[0]
+			itemList.getJson().then(items=>{
+				var item = items.find(r=>r.itemId==itemId);
+				message.channel.send(await lookNice(item));
 			});
 		}
 	},
