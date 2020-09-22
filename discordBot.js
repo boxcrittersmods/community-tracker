@@ -318,9 +318,9 @@ var commands = {
 	},
 	"room": {
 		args: ["roomId"], description: "Look up Rooms", call: async function name(message, args) {
-			var roomId = args[0]
+			var roomId = args.join(" ")
 			roomList.getJson().then(async rooms => {
-				var room = rooms.find(r => r.roomId == roomId);
+				var room = rooms.find(r => r.roomId == roomId||r.name==roomId);
 				if (!room) {
 					message.channel.send("Invalid Room");
 					return;
@@ -332,9 +332,9 @@ var commands = {
 	},
 	"item": {
 		args: ["itemId"], description: "Look up Items", call: async function name(message, args) {
-			var itemId = args[0]
+			var itemId = args.join(" ")
 			itemList.getJson().then(async items => {
-				var item = items.find(r => r.itemId == itemId||i.name==itemId);
+				var item = items.find(r => r.itemId == itemId||r.name==itemId);
 				if (!item) {
 					message.channel.send("Invalid Item");
 					return;
@@ -348,7 +348,7 @@ var commands = {
 async function parseCommand(message) {
 	var parts = message.content.split(" ")
 	parts.shift();
-	var cmd = parts.shift();
+	var cmd = parts.shift().toLowerCase();
 	if (!commands[cmd]) {
 		console.log("Invalid command " + cmd);
 		return;
@@ -360,7 +360,10 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.startsWith('!bc')) {
+	/*if(message.content.startsWith("!BC")) {
+		message.channel.send("> small bc\n> not capital\n-- p1")
+	}*/
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
