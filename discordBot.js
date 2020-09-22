@@ -184,6 +184,8 @@ async function lookNice(data) {
 		} else {
 			data.nickname = `Player: ${data.nickname}`
 		}
+
+		data.isApproved = data.isApproved||false;
 	}
 
 	for (const key in data) {
