@@ -196,7 +196,7 @@ async function lookNice(data) {
 			case "nickname":
 				embed.setTitle("__**"+data[key]+"**__");
 				if(data.itemId) {
-					embed.setURL(getWikiUrl(data.itemId))
+					embed.setURL(await getWikiUrl(data.itemId))
 				}
 				break;
 			case "critterId":
