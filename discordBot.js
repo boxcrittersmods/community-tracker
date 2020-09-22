@@ -363,7 +363,7 @@ client.on('message', message => {
 	/*if(message.content.startsWith("!BC")) {
 		message.channel.send("> small bc\n> not capital\n-- p1")
 	}*/
-	if (message.content.toLowerCase().startsWith('!test')) {
+	if (message.content.toLowerCase().startsWith('!bc')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
