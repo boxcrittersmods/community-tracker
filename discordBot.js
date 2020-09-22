@@ -106,7 +106,7 @@ async function displayPlayer(player) {
 	var canvas = Canvas.createCanvas(340,400);
 	var context = canvas.getContext('2d');
 
-	var layers = ["feet","backs.ride", "tail", "backs.hand", "backs.eyes", "backs.ears", "backs.head", "backs.neck", "backs.fuzz", "backs.pack", "backs.belt", "backs.body", "backs.mask", "body", "ears", "face", "slots.mask", "slots.body", "slots.belt", "slots.pack", "slots.fuzz", "slots.neck", "slots.head", "slots.ears", "slots.eyes", "nose", "slots.hand", "slots.ride"]
+	var layers = ["feet","back.ride", "tail", "back.hand", "back.eyes", "back.ears", "back.head", "back.neck", "back.fuzz", "back.pack", "back.belt", "back.body", "back.mask", "body", "ears", "face", "slots.mask", "slots.body", "slots.belt", "slots.pack", "slots.fuzz", "slots.neck", "slots.head", "slots.ears", "slots.eyes", "nose", "slots.hand", "slots.ride"]
 	for(var layer of layers) {
 		switch(layer) {
 			case "tail":
@@ -144,13 +144,32 @@ async function lookNice(data) {
 	var embed = new Discord.RichEmbed()
 	.setColor(0x55cc11)
 	function field(key) {
+		var value = data[key];
 		if(!data[key]) return;
-		var type = typeof(data[key]);
+		var type = typeof(value);
 		var boolean = type == "boolean"
 		if (boolean) {
-			data[key] = data[key] ? "✅" : "❌";
+			value = value ? "✅" : "❌";
 		}
-		embed.addField(key,data[key],["boolean","number"].includes(type))
+		key = key.replace("is","");
+		key = key.replace("gear","Current Gear");
+		key = key.replace("lastSeen","Last Seen");
+		key = key.replace("Team","Team Member");
+		key = key.replace("Aproved","Approved Nickname");
+		key = key.charAt(0).toUpperCase() + key.substr(1)
+		embed.addField(key,value,["boolean","number"].includes(type))
+	}
+
+	if(data.nickname){
+	var mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"]
+	if(!data.isApproved) {
+		data.nickname = "<Nickname>"
+	}
+		if(mascots.includes(data.nickname)) {
+			data.nickname = `Mascot: ${data.nickname}`
+		} else {
+			data.nickname = `Player: ${data.nickname}`
+		}
 	}
 
 	for (const key in data) {
@@ -167,7 +186,7 @@ async function lookNice(data) {
 							embed.addField("Critter","<:bcmcrsnail:715520658238472253>",true)
 						break;
 				case "hamster":
-					embed.addField("Critter","<:critterhamster:701095038746362029>",true)
+					embed.addField("Critter Type","<:critterhamster:701095038746362029>",true)
 					break;
 					default:
 						field(key);
@@ -181,7 +200,7 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
-				//Gear Display
+			//Gear Display
 				var image = await displayPlayer(data);
 				embed.attachFiles([{name:"player.png",attachment:image.message}]).setThumbnail("attachment://player.png")
 
@@ -319,7 +338,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.startsWith('!bc')) {
+	if (message.content.startsWith('!test')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
