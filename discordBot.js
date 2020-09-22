@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const Website = require("./website");
+const Canvas = require('canvas');
 var db = require("./db");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
@@ -27,11 +28,86 @@ async function getWikiUrl(itemId) {
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
+function drawImage(context, url,x,y,w,h) {
+	return new Promise(async (res,rej)=>{
+		 Canvas.loadImage(url).then(image =>{
+			context.drawImage(image,x,y,w,h)
+			res();
+		 }).catch(e=>{
+			console.log("Error with: " + url)
+			res();
+		});
+
+	})
+}
+
+async function displayRoom(room) {
+	var canvas = Canvas.createCanvas(room.width,room.height);
+	var context = canvas.getContext('2d');
+	
+	await drawImage(context,room.background,0,0,canvas.width,canvas.height);
+	await drawImage(context,room.foreground,0,0,canvas.width,canvas.height);
+
+	var attachment = new Discord.MessageAttachment(canvas.toBuffer(),room.roomId + ".png")
+	return attachment;
+}
+
+async function displayPlayer(player) {
+	var items = await itemList.getJson();
+
+	var rules = {
+		hideNose:false,
+		hideEars:false
+	}
+
+	var gearSlots = player.gear.map(g=>{
+		var item = items.find(i=>i.itemId==g);
+	for (const rule in rules) {
+		rules[rule] = rules[rule]|item[rule]
+	}
+		return item.slot;
+	})
+
+	var canvas = Canvas.createCanvas(340,400);
+	var context = canvas.getContext('2d');
+
+	var layers = ["feet","backs.ride", "tail", "backs.hand", "backs.eyes", "backs.ears", "backs.head", "backs.neck", "backs.fuzz", "backs.pack", "backs.belt", "backs.body", "backs.mask", "body", "ears", "face", "slots.mask", "slots.body", "slots.belt", "slots.pack", "slots.fuzz", "slots.neck", "slots.head", "slots.ears", "slots.eyes", "nose", "slots.hand", "slots.ride"]
+	for(var layer of layers) {
+		switch(layer) {
+			case "tail":
+			case "body":
+			case "ears":
+			case "face":
+			case "nose":
+			case "feet":
+				if(layer=="nose"&&rules.hideNose) break;
+				if(layer=="ears"&&rules.hideEars) break;
+				var url =  `https://media.boxcritters.com/critters/${player.critterId}/${layer}.png`
+				await drawImage(context,url,0,0,canvas.width,canvas.height)
+
+				break;
+			default: //Items
+				var layerParts = layer.split(".");
+				var position = layerParts[0].replace("slots","front");
+				var slot = layerParts[1];
+				var gearId = gearSlots.indexOf(slot)
+				if(gearId==-1)continue;
+				var gear = player.gear[gearId];
+				var url = `https://media.boxcritters.com/items/${gear}/${position}.png`;
+				await drawImage(context,url,0,0,canvas.width,canvas.height)
+
+			break;
+		}
+	}
+
+	var attachment = new Discord.MessageAttachment(canvas.toBuffer(),"player.png")
+	return attachment;
+
+}
 
 async function lookNice(data) {
-	var embed = {
-		color: 0x55cc11, fields: []
-	};
+	var embed = new Discord.RichEmbed()
+	.setColor(0x55cc11)
 	function field(key) {
 		if(!data[key]) return;
 		var type = typeof(data[key]);
@@ -39,11 +115,7 @@ async function lookNice(data) {
 		if (boolean) {
 			data[key] = data[key] ? "✅" : "❌";
 		}
-		embed.fields.push({
-			name: key,
-			value: data[key].toString() || "N/A",
-			inline: ["boolean","number"].includes(type)
-		});
+		embed.addField(key,data[key],["boolean","number"].includes(type))
 	}
 
 	for (const key in data) {
@@ -51,11 +123,19 @@ async function lookNice(data) {
 		switch (key) {
 			case "name":
 			case "nickname":
-				embed.title = data[key];
+				embed.setTitle(data[key]);
 				break;
 			case "critterId":
 				data[key] = data[key] || "hamster";
-				field(key);
+				switch (data[key]) {
+					case "snail":
+							field("<:bcmcrsnail:715520658238472253>");
+						break;
+				
+					default:
+						field(key);
+						break;
+				}
 				break;
 			case "created":
 			case "lastSeen":
@@ -63,6 +143,11 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "gear":
+				//Gear Display
+				var image = await displayPlayer(data);
+				embed.attachFiles([{name:"player.png",attachment:image.message}]).setThumbnail("attachment://player.png")
+
+			//Gear List
 				data[key] = await Promise.all(data[key].map(async i => {
 					var wikiUrl = await getWikiUrl(i);
 					return wikiUrl ? `[${i}](${wikiUrl})` : i
@@ -71,13 +156,17 @@ async function lookNice(data) {
 				field(key);
 				break;
 			case "icon":
-				embed.thumbnail = {};
-				embed.thumbnail.url = data[key];
+				embed.setThumbnail(data[key])
 				break;
 			case "background":
+			case "foreground":
+				var image = await displayRoom(data);
+				delete data.foreground
+				delete data.background;
+				embed.attachFiles([{name:"room.png",attachment:image.message}]).setImage("attachment://room.png")
+				break;
 			case "sprites":
-				embed.image = {};
-				embed.image.url = data[key];
+				embed.setImage(data[key]);
 				break;
 			default:
 				field(key)
@@ -134,6 +223,7 @@ var commands = {
 					await db.add(id,data.nickname);
 					message.channel.send(data.nickname + " has been saved to the dictionary as " + id + ". You can now use the nickname to look up this player.");
 				}
+				data.critterId = data.critterId||"hamster";
 				message.channel.send(await lookNice(data));
 			});
 		}
@@ -152,7 +242,8 @@ var commands = {
 					message.channel.send("Invalid Room");
 					return;
 				}
-				message.channel.send(await lookNice(room));
+				var nice = await lookNice(room)
+				message.channel.send(nice);
 			});
 		}
 	},
@@ -186,8 +277,8 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.startsWith('!bc')) {
-		parseCommand(message).catch(message.channel.send);
+	if (message.content.startsWith('!test')) {
+		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
 

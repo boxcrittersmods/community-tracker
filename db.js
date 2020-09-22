@@ -1,5 +1,5 @@
 const {MongoClient} = require('mongodb');
-var dbUser = process.env.DB_USER || info.dbUser;
+var dbUser = process.env.DB_USER || require("./config/token").dbUser;
 var dbPassword = process.env.DB_PASSWORD || require("./config/token").dbPassword;
 const uri = `mongodb+srv://${dbUser}:${dbPassword}@playerdictionary.mftw9.mongodb.net/playerIds?retryWrites=true&w=majority`;
 
