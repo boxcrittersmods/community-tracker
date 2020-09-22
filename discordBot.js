@@ -30,25 +30,31 @@ function timeSince(date) {
 	var interval = seconds / 31536000;
   
 	if (interval > 1) {
-	  return Math.floor(interval) + " years ago";
+		var value = Math.floor(interval);
+	  return value + " year" +(value==1?"":"s") + " ago";
 	}
 	interval = seconds / 2592000;
 	if (interval > 1) {
-	  return Math.floor(interval) + " months ago";
+		var value = Math.floor(interval);
+		return value + " month" +(value==1?"":"s") + " ago";
 	}
 	interval = seconds / 86400;
 	if (interval > 1) {
-	  return Math.floor(interval) + " days ago";
+		var value = Math.floor(interval);
+		return value + " day" +(value==1?"":"s") + " ago";
 	}
 	interval = seconds / 3600;
 	if (interval > 1) {
-	  return Math.floor(interval) + " hours ago";
+		var value = Math.floor(interval);
+		return value + " hour" +(value==1?"":"s") + " ago";
 	}
 	interval = seconds / 60;
 	if (interval > 1) {
-	  return Math.floor(interval) + " minutes ago";
+		var value = Math.floor(interval);
+		return value + " minute" +(value==1?"":"s") + " ago";
 	}
-	return Math.floor(seconds) + " seconds ago";
+	var value = Math.floor(seconds);
+	  return value + " second" + (value==1?"":"s") + " ago";
   }
 
 async function getWikiUrl(itemId) {
