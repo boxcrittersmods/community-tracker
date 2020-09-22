@@ -19,7 +19,7 @@ client.on('ready', () => {
 
 async function getItemName(itemId) {
 	var items = await itemList.getJson();
-	var item = items.find(i => i.itemId == itemId)
+	var item = items.find(i => i.itemId == itemId||i.name==itemId)
 	return item.name;
 }
 
@@ -334,7 +334,7 @@ var commands = {
 		args: ["itemId"], description: "Look up Items", call: async function name(message, args) {
 			var itemId = args[0]
 			itemList.getJson().then(async items => {
-				var item = items.find(r => r.itemId == itemId);
+				var item = items.find(r => r.itemId == itemId||i.name==itemId);
 				if (!item) {
 					message.channel.send("Invalid Item");
 					return;
