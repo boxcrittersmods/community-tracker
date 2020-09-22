@@ -159,7 +159,6 @@ async function lookNice(data) {
 		.setColor(0x55cc11)
 	function field(key) {
 		var value = data[key];
-		//if (!data[key]) return;
 		var type = typeof (value);
 		var boolean = type == "boolean"
 		if (boolean) {
@@ -171,6 +170,7 @@ async function lookNice(data) {
 		key = key.replace("Team", "Team Member");
 		key = key.replace("Approved", "Nickname Approved");
 		key = key.charAt(0).toUpperCase() + key.substr(1)
+		if (!data[key]) return;
 		embed.addField("**"+key+"**", value, ["boolean", "number"].includes(type))
 	}
 
