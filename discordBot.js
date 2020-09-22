@@ -22,6 +22,35 @@ async function getItemName(itemId) {
 	var item = items.find(i => i.itemId == itemId)
 	return item.name;
 }
+
+function timeSince(date) {
+
+	var seconds = Math.floor((new Date() - date) / 1000);
+  
+	var interval = seconds / 31536000;
+  
+	if (interval > 1) {
+	  return Math.floor(interval) + " years ago";
+	}
+	interval = seconds / 2592000;
+	if (interval > 1) {
+	  return Math.floor(interval) + " months ago";
+	}
+	interval = seconds / 86400;
+	if (interval > 1) {
+	  return Math.floor(interval) + " days ago";
+	}
+	interval = seconds / 3600;
+	if (interval > 1) {
+	  return Math.floor(interval) + " hours ago";
+	}
+	interval = seconds / 60;
+	if (interval > 1) {
+	  return Math.floor(interval) + " minutes ago";
+	}
+	return Math.floor(seconds) + " seconds ago";
+  }
+
 async function getWikiUrl(itemId) {
 	var itemName = wikiPages[itemId] || await getItemName(itemId);
 	if (!itemName) return;
@@ -129,9 +158,11 @@ async function lookNice(data) {
 				data[key] = data[key] || "hamster";
 				switch (data[key]) {
 					case "snail":
-							field("<:bcmcrsnail:715520658238472253>");
+							embed.addField("Critter","<:bcmcrsnail:715520658238472253>",true)
 						break;
-				
+				case "hamster":
+					embed.addField("Critter","<:critterhamster:701095038746362029>",true)
+					break;
 					default:
 						field(key);
 						break;
@@ -139,7 +170,8 @@ async function lookNice(data) {
 				break;
 			case "created":
 			case "lastSeen":
-				data[key] = new Date(data[key]).toDateString();
+				var date = new Date(data[key])
+				data[key] = `${timeSince(date)} (${date.toDateString()})`;
 				field(key);
 				break;
 			case "gear":
@@ -167,6 +199,10 @@ async function lookNice(data) {
 				break;
 			case "sprites":
 				embed.setImage(data[key]);
+				break;
+			case "playerId":
+				data[key] = `[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`
+				field(key);
 				break;
 			default:
 				field(key)
