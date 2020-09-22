@@ -1,9 +1,6 @@
-const { distanceFromHash } = require('jimp');
 const {MongoClient} = require('mongodb');
-var info = require("./config/token");
-const { user } = require('./discordBot');
 var dbUser = process.env.DB_USER || info.dbUser;
-var dbPassword = process.env.DB_PASSWORD || info.dbPassword;
+var dbPassword = process.env.DB_PASSWORD || require("./config/token").dbPassword;
 const uri = `mongodb+srv://${dbUser}:${dbPassword}@playerdictionary.mftw9.mongodb.net/playerIds?retryWrites=true&w=majority`;
 
 async function connect() {
