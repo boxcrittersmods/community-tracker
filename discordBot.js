@@ -186,6 +186,7 @@ async function lookNice(data) {
 		}
 
 		data.isApproved = data.isApproved||false;
+		data.gear = data.gear ||[];
 	}
 
 	for (const key in data) {
