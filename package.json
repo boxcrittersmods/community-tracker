@@ -23,6 +23,7 @@
     "jsdom": "^16.4.0",
     "mongodb": "^3.6.2",
     "node-fetch": "^2.6.1",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "string-similarity": "^4.0.2"
   }
 }

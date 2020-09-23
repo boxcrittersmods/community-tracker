@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const Website = require("./website");
 const Canvas = require('canvas');
 var db = require("./db");
+var stringSimilarity = require('string-similarity');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 const wikiPages = require("./wikiPages.json");
@@ -19,7 +20,7 @@ client.on('ready', () => {
 
 async function getItemName(itemId) {
 	var items = await itemList.getJson();
-	var item = items.find(i => i.itemId == itemId||i.name==itemId)
+	var item = items.find(i => i.itemId == itemId || i.name == itemId)
 	return item.name;
 }
 
@@ -45,18 +46,18 @@ function timeSince(date) {
 			var value = Math.floor(interval);
 			output.push(value + " day" + (value == 1 ? "" : "s"));
 		}
-		interval = (seconds / 3600)%24;
+		interval = (seconds / 3600) % 24;
 		if (interval > 1) {
 			var value = Math.floor(interval);
 			output.push(value + " hour" + (value == 1 ? "" : "s"));
 		}
-		interval = (seconds / 60)%60;
+		interval = (seconds / 60) % 60;
 		if (interval > 1) {
 			var value = Math.floor(interval);
 			output.push(value + " minute" + (value == 1 ? "" : "s"));
 		}
 	}
-	if(output.length>0){
+	if (output.length > 0) {
 		return output.join(", ") + " ago"
 
 	} else {
@@ -98,9 +99,9 @@ async function displayPlayer(player) {
 
 	var canvas = Canvas.createCanvas(340, 400);
 	var context = canvas.getContext('2d');
-	if(player.critterId == "snail"){
+	if (player.critterId == "snail") {
 		canvas.width = canvas.height = 128;
-		drawImage(context,"https://cdn.discordapp.com/emojis/701095041426391091.png?v=1",0,0,canvas.width,canvas.height)
+		drawImage(context, "https://cdn.discordapp.com/emojis/701095041426391091.png?v=1", 0, 0, canvas.width, canvas.height)
 	}
 
 
@@ -171,7 +172,7 @@ async function lookNice(data) {
 		key = key.replace("Team", "Team Member");
 		key = key.replace("Approved", "Nickname Approved");
 		key = key.charAt(0).toUpperCase() + key.substr(1)
-		embed.addField("**"+key+"**", value, ["boolean", "number"].includes(type))
+		embed.addField("**" + key + "**", value, ["boolean", "number"].includes(type))
 	}
 
 	if (data.nickname) {
@@ -185,8 +186,8 @@ async function lookNice(data) {
 			data.nickname = `Player: ${data.nickname}`
 		}
 
-		data.isApproved = data.isApproved||false;
-		data.gear = data.gear ||[];
+		data.isApproved = data.isApproved || false;
+		data.gear = data.gear || [];
 	}
 
 	for (const key in data) {
@@ -194,8 +195,8 @@ async function lookNice(data) {
 		switch (key) {
 			case "name":
 			case "nickname":
-				embed.setTitle("__**"+data[key]+"**__");
-				if(data.itemId) {
+				embed.setTitle("__**" + data[key] + "**__");
+				if (data.itemId) {
 					embed.setURL(await getWikiUrl(data.itemId))
 				}
 				break;
@@ -210,7 +211,8 @@ async function lookNice(data) {
 						embed.addField(title, "<:critterhamster:701095038746362029>", true)
 						break;
 					case "lizard":
-						embed.addField(title,"<:critterlizard:701095041464139847>",true);
+						embed.addField(title, "<:critterlizard:701095041464139847>", true);
+						break;
 					default:
 						field(key);
 						break;
@@ -220,8 +222,8 @@ async function lookNice(data) {
 			case "lastSeen":
 				var date = new Date(data[key])
 				var time = timeSince(date);
-				data[key] = (key=="lastSeen"?(time=="now"?"🟢 ":"🔴 "):"")+(key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen","Online")+" "+
-				`${time} (${date.toDateString()})` ;
+				data[key] = (key == "lastSeen" ? (time == "now" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "Online") + " " +
+					`${time} (${date.toDateString()})`;
 				field(key);
 				break;
 			case "gear":
@@ -288,10 +290,12 @@ var commands = {
 		}
 	},
 	"lookup": {
-		args: ["username"], description: "Look up players", call: async function (message, args) {
+		args: ["username/playerId"], description: "Look up players", call: async function (message, args) {
+			var nickname = args.join(" ");
+			var playerNicknames = await db.list();
+			playeNickmame = getCloseset([...playerNicknames.map(n => n.toLowerCase()))
 			//message.channel.send("Is that you " + message.author + "? I know thats you. Well, this command hasn't been made yet.")
 
-			var nickname = args.join(" ");
 			var id = await db.get(nickname) || nickname;
 
 			function invalidError() {
@@ -314,18 +318,14 @@ var commands = {
 			});
 		}
 	},
-	"dictionary": {
-		args: [], description: "Lists the playerIds and the respective nicknames of all known players.", call: async function (message, args) {
-			message.channel.send("```json\n" + JSON.stringify(playerIds) + "```")
-		}
-	},
 	"room": {
 		args: ["roomId"], description: "Look up Rooms", call: async function name(message, args) {
 			var roomId = args.join(" ")
 			roomList.getJson().then(async rooms => {
-				var room = rooms.find(r => r.roomId == roomId||r.name==roomId);
+				roomId = getCloseset([...rooms.map(r => r.roomId.toLowerCase()), ...rooms.map(r => r.name.toLowerCase())], roomId.toLowerCase())
+				var room = rooms.find(r => r.roomId == roomId || r.name.toLowerCase() == roomId);
 				if (!room) {
-					message.channel.send("Invalid Room");
+					message.channel.send("Invalid Room: " + room);
 					return;
 				}
 				var nice = await lookNice(room)
@@ -337,9 +337,12 @@ var commands = {
 		args: ["itemId"], description: "Look up Items", call: async function name(message, args) {
 			var itemId = args.join(" ")
 			itemList.getJson().then(async items => {
-				var item = items.find(r => r.itemId == itemId||r.name==itemId);
+				var similarity = getCloseset([...items.map(i => i.itemId.toLowerCase()), ...items.map(i => i.name.toLowerCase())], itemId.toLowerCase())
+				itemId = similarity.value
+				message.channel.send("")
+				var item = items.find(i => i.itemId == itemId || i.name.toLowerCase() == itemId);
 				if (!item) {
-					message.channel.send("Invalid Item");
+					message.channel.send("Invalid Item: " + itemId);
 					return;
 				}
 				message.channel.send(await lookNice(item));
@@ -348,10 +351,17 @@ var commands = {
 	}
 }
 
+function getCloseset(array, value) {
+	var similarity = stringSimilarity.findBestMatch("_" + value, array.map(a => "_" + a));
+	console.log("Similarities of " + value, similarity.ratings);
+	return { value: similarity.bestMatch.target.substr(1), rating: similarity.ratings[similarity.bestMatchIndex] };
+}
+
 async function parseCommand(message) {
 	var parts = message.content.split(" ")
 	parts.shift();
-	var cmd = parts.shift().toLowerCase();
+	var commandIds = Object.keys(commands);
+	var cmd = getCloseset(commandIds, parts.shift()).value;
 	if (!commands[cmd]) {
 		console.log("Invalid command " + cmd);
 		return;
@@ -359,11 +369,12 @@ async function parseCommand(message) {
 	await commands[cmd].call(message, parts)
 }
 
+
 client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });

@@ -29,6 +29,17 @@ async function addToDB(playerId,nickname) {
 
 }
 
+async function getUsenames() {
+	var client = await connect();
+	var db = client.db();
+	var collection = db.collection("playerIds");
+	var usernames= await collection.distinct("nickname")
+	console.log(usernames);
+	await disconnect(client);
+
+}
+
+
 
 async function getFromDB(nickname) {
 	var client = await connect();
@@ -42,5 +53,6 @@ async function getFromDB(nickname) {
 
 module.exports = {
 	add:addToDB,
-	get:getFromDB
+	get:getFromDB,
+	list:getUsenames
 }
