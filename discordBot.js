@@ -215,6 +215,9 @@ async function lookNice(data) {
 					case "lizard":
 						embed.addField(title, "<:critterlizard:701095041464139847>", true);
 						break;
+					case "beaver":
+						embed.addField(title,"<:critterbeaver:701095038192713738>",true);
+						break;
 					default:
 						field(key);
 						break;
