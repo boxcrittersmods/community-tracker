@@ -200,14 +200,17 @@ async function lookNice(data) {
 				}
 				break;
 			case "critterId":
+				var title = "**Critter Type**";
 				data[key] = data[key] || "hamster";
 				switch (data[key]) {
 					case "snail":
-						embed.addField("**Critter Type**", "<:bcmcrsnail:715520658238472253>", true)
+						embed.addField(title, "<:bcmcrsnail:715520658238472253>", true)
 						break;
 					case "hamster":
-						embed.addField("**Critter Type**", "<:critterhamster:701095038746362029>", true)
+						embed.addField(title, "<:critterhamster:701095038746362029>", true)
 						break;
+					case "lizard":
+						embed.addField(title,"<:critterlizard:701095041464139847>",true);
 					default:
 						field(key);
 						break;
@@ -360,9 +363,6 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	/*if(message.content.startsWith("!BC")) {
-		message.channel.send("> small bc\n> not capital\n-- p1")
-	}*/
 	if (message.content.toLowerCase().startsWith('!bc')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
