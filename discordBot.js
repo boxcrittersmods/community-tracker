@@ -204,7 +204,7 @@ async function lookNice(data) {
 				data[key] = data[key] || "hamster";
 				switch (data[key]) {
 					case "snail":
-						embed.addField(title, "<:bcmcrsnail:715520658238472253>", true)
+						embed.addField(title, "<:rsnail:701095041426391091>", true)
 						break;
 					case "hamster":
 						embed.addField(title, "<:critterhamster:701095038746362029>", true)
