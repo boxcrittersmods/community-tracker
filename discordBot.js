@@ -2,10 +2,12 @@ const Discord = require("discord.js");
 const Website = require("./website");
 const Canvas = require('canvas');
 var db = require("./db");
+var settings = require("./settings")
 var stringSimilarity = require('string-similarity');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 const wikiPages = require("./wikiPages.json");
+const { getBase64 } = require("jimp");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
@@ -222,7 +224,7 @@ async function lookNice(data) {
 			case "lastSeen":
 				var date = new Date(data[key])
 				var time = timeSince(date);
-				data[key] = (key == "lastSeen" ? (time == "now" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "Online") + " " +
+				data[key] = (key == "lastSeen" ? (time == "now" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "Last Online") + " " +
 					`${time} (${date.toDateString()})`;
 				field(key);
 				break;
@@ -286,17 +288,22 @@ var commands = {
 	},
 	"help": {
 		args: [], description: "Lists help commands", call: async function (message, args) {
-			message.channel.send("Commands: ```" + Object.keys(commands).map(c => "!bc " + c + " " + commands[c].args.map(a => "[" + a + "]").join(" ") + " - " + commands[c].description).join("\n") + "```Want specific help?: https://discord.gg/D2ZpRUW");
+			message.channel.send("Commands: ```" + Object.keys(commands).map(c => "!bc " + c + " " + commands[c].args.map(a => !a.includes("(") ? "[" + a + "]" : a).join(" ") + " - " + commands[c].description).join("\n") + "```Want specific help?: https://discord.gg/D2ZpRUW");
 		}
 	},
 	"lookup": {
-		args: ["username/playerId"], description: "Look up players", call: async function (message, args) {
+		args: ["nickname/playerId"], description: "Look up players", call: async function (message, args) {
 			var nickname = args.join(" ");
 			var playerNicknames = await db.list();
-			playeNickmame = getCloseset([...playerNicknames.map(n => n.toLowerCase()))
-			//message.channel.send("Is that you " + message.author + "? I know thats you. Well, this command hasn't been made yet.")
+			var similarity = getCloseset(playerNicknames, nickname)
+			var id;
+			if (similarity.rating > .3) {
+				id = await db.get(playerNicknames[similarity.index]);
+				message.channel.send(nickname + " is close to " + playerNicknames[similarity.index] + " with a " + similarity.rating * 100 + "% similarity.")
+			} else {
+				id = nickname
 
-			var id = await db.get(nickname) || nickname;
+			}
 
 			function invalidError() {
 				message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type `world.player.playerId` into the developer console.")
@@ -319,10 +326,10 @@ var commands = {
 		}
 	},
 	"room": {
-		args: ["roomId"], description: "Look up Rooms", call: async function name(message, args) {
+		args: ["roomId or name"], description: "Look up Rooms", call: async function name(message, args) {
 			var roomId = args.join(" ")
 			roomList.getJson().then(async rooms => {
-				roomId = getCloseset([...rooms.map(r => r.roomId.toLowerCase()), ...rooms.map(r => r.name.toLowerCase())], roomId.toLowerCase())
+				roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId)
 				var room = rooms.find(r => r.roomId == roomId || r.name.toLowerCase() == roomId);
 				if (!room) {
 					message.channel.send("Invalid Room: " + room);
@@ -334,10 +341,10 @@ var commands = {
 		}
 	},
 	"item": {
-		args: ["itemId"], description: "Look up Items", call: async function name(message, args) {
+		args: ["itemId or name"], description: "Look up Items", call: async function name(message, args) {
 			var itemId = args.join(" ")
 			itemList.getJson().then(async items => {
-				var similarity = getCloseset([...items.map(i => i.itemId.toLowerCase()), ...items.map(i => i.name.toLowerCase())], itemId.toLowerCase())
+				var similarity = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId)
 				itemId = similarity.value
 				message.channel.send("")
 				var item = items.find(i => i.itemId == itemId || i.name.toLowerCase() == itemId);
@@ -348,13 +355,50 @@ var commands = {
 				message.channel.send(await lookNice(item));
 			});
 		}
+	},
+	"settings": {
+		args: ["set/reset", "key", "(value)"],
+		description: "Set server specific bot settings",
+		call:async function (message, args) {
+			var serverId = message.guild.id;
+			var serverName = message.guild.name;
+			var currentSettings = await settings.get(serverId);
+			var key = args.shift();
+			var value = args.shift();
+
+			if(key == "reset") {
+				await settings.reset(serverId);
+				message.channel.send(`Reset settings for ${serverName}`)
+
+			} else if(value) {
+				message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
+				currentSettings[key] = value;
+				message.channel.send(`${serverName}.\`${key}\`=\`${value}\``);
+				await settings.set(serverId,currentSettings);
+			}
+
+			
+			var embed = new Discord.RichEmbed();
+			embed.setTitle("Settings for " + serverName);
+			if(Object.keys(currentSettings).length==0)embed.setDescription("No Settings")
+			for (const k in currentSettings) {
+				if(!key||k==key) embed.addField(k[0].toUpperCase() + k.substring(1),"```" + JSON.stringify(currentSettings[k],null,2) + "```");
+			}
+			message.channel.send({embed})	
+
+		}
 	}
 }
 
 function getCloseset(array, value) {
-	var similarity = stringSimilarity.findBestMatch("_" + value, array.map(a => "_" + a));
+	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
-	return { value: similarity.bestMatch.target.substr(1), rating: similarity.ratings[similarity.bestMatchIndex] };
+	return {
+		value: similarity.bestMatch.target.substr(1),
+		rating: similarity.ratings[similarity.bestMatchIndex].rating,
+		index: similarity.bestMatchIndex,
+		ratings: similarity.ratings
+	};
 }
 
 async function parseCommand(message) {
@@ -362,6 +406,39 @@ async function parseCommand(message) {
 	parts.shift();
 	var commandIds = Object.keys(commands);
 	var cmd = getCloseset(commandIds, parts.shift()).value;
+	
+	var currentSettings = await settings.get(message.guild.id);
+	var channelQuery = currentSettings[cmd+"Channel"];
+	if(channelQuery){
+		let chId = channelQuery.replace(/\D/g,'');
+		if(message.channel.id!=chId) {
+			let embed = new Discord.RichEmbed()
+			.setTitle("IncorectChannel")
+			.setColor(0xff0000)
+			.setDescription("No go to " + channelQuery);
+			var msg = await message.channel.send({embed});
+			setTimeout(()=>{
+				msg.delete();
+			},3000);
+			return;
+		}
+	}
+	var roleQuery = currentSettings[cmd+"Permissions"];
+	if(roleQuery) {
+		let rlId = roleQuery.replace(/\D/g,'');
+		if(!message.member.roles.has(rlId)) {
+			let embed = new Discord.RichEmbed()
+			.setTitle("You are unautherised to use this command")
+			.setColor(0xff0000)
+			.setDescription("Only " + roleQuery + " can use this command");
+			var msg = await message.channel.send({embed});
+			setTimeout(()=>{
+				msg.delete();
+			},3000);
+			return;
+		}
+	}
+
 	if (!commands[cmd]) {
 		console.log("Invalid command " + cmd);
 		return;

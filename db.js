@@ -9,13 +9,6 @@ async function connect() {
 	return client;
 }
 
-async function listDatabases(){
-    databasesList = await client.db().admin().listDatabases();
- 
-    console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
-
 async function disconnect(client) {
 	await client.close();
 }
@@ -34,8 +27,8 @@ async function getUsenames() {
 	var db = client.db();
 	var collection = db.collection("playerIds");
 	var usernames= await collection.distinct("nickname")
-	console.log(usernames);
 	await disconnect(client);
+	return usernames;
 
 }
 
