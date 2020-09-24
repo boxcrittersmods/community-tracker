@@ -35,7 +35,7 @@ function getCritterEmoji(critterID) {
 		return "<:rsnail:701095041426391091>";
 	}
 	var boxCutters = client.guilds.get("570411578139344926");
-	return boxCutters.emojis.find(emoji=>emoji.name==="critter"+critterID.toLowerCase());
+	return boxCutters.emojis.find(emoji=>emoji.name.toLowerCase()==="critter"+critterID.toLowerCase());
 }
 
 function timeSince(date) {
