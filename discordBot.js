@@ -341,8 +341,9 @@ var commands = {
 		args: ["roomId or name"], description: "Look up Rooms", call: async function name(message, args) {
 			var roomId = args.join(" ")
 			roomList.getJson().then(async rooms => {
-				roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId)
-				var room = rooms.find(r => r.roomId == roomId || r.name.toLowerCase() == roomId);
+				var similarity = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId);
+				roomId = similarity.value;
+				var room = rooms.find(r => r.roomId == roomId || r.name == roomId);
 				if (!room) {
 					message.channel.send("Invalid Room: " + room);
 					return;
