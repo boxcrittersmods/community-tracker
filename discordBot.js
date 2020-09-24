@@ -469,7 +469,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!test')) {
+	if (message.content.toLowerCase().startsWith('!bc')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
