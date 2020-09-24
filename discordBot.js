@@ -6,6 +6,8 @@ var settings = require("./settings")
 var stringSimilarity = require('string-similarity');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
+String.prototype.replaceAll = (a,b)=>this.split(a).join(b);
+
 const wikiPages = require("./wikiPages.json");
 const { getBase64 } = require("jimp");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
@@ -394,10 +396,10 @@ var commands = {
 }
 
 function getCloseset(array, value) {
-	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
+	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replaceAll(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
 	return {
-		value: similarity.bestMatch.target.substr(1),
+		value: array[similarity.bestMatchIndex],
 		rating: similarity.ratings[similarity.bestMatchIndex].rating,
 		index: similarity.bestMatchIndex,
 		ratings: similarity.ratings
