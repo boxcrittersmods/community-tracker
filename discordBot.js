@@ -316,7 +316,7 @@ var commands = {
 			if (similarity.rating > .3) {
 				id = await db.get(playerNicknames[similarity.index]);
 				if(similarity.rating == 1){
-					message.channel.send(`No, you know your right I'm not going to say how close you where. So I'm just going to get it for you.`);
+					message.channel.send(`No, you know you were right. I'm not going to say how close you were. I'll just get the account for you`);
 					
 				} else {
 					message.channel.send(`I'm not sure who ${nickname} is but it seems similar to ${similarity.value} with a ${similarity.rating*100}% similarirty`);
