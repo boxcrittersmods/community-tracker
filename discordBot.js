@@ -30,6 +30,14 @@ async function getItemName(itemId) {
 	return item.name;
 }
 
+function getCritterEmoji(critterID) {
+	if(critterID=="snail") { 
+		return "<:rsnail:701095041426391091>";
+	}
+	var boxCutters = client.guilds.get("570411578139344926");
+	return boxCutters.emojis.find(emoji=>emoji.name==="critter"+critterID.toLowerCase());
+}
+
 function timeSince(date) {
 
 	var seconds = Math.floor((new Date() - date) / 1000);
@@ -209,7 +217,8 @@ async function lookNice(data) {
 			case "critterId":
 				var title = "**Critter Type**";
 				data[key] = data[key] || "hamster";
-				switch (data[key]) {
+				embed.addField(title,getCritterEmoji(data[key]),true);
+				/*switch (data[key]) {
 					case "snail":
 						embed.addField(title, "<:rsnail:701095041426391091>", true)
 						break;
@@ -225,7 +234,7 @@ async function lookNice(data) {
 					default:
 						field(key);
 						break;
-				}
+				}*/
 				break;
 			case "created":
 			case "lastSeen":
