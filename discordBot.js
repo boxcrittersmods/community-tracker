@@ -6,7 +6,9 @@ var settings = require("./settings")
 var stringSimilarity = require('string-similarity');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
-String.prototype.replaceAll = (a,b)=>this.split(a).join(b);
+String.prototype.replaceAll = function (a,b){
+	return this.split(a).join(b)
+};
 
 const wikiPages = require("./wikiPages.json");
 const { getBase64 } = require("jimp");
@@ -304,7 +306,12 @@ var commands = {
 			var id;
 			if (similarity.rating > .3) {
 				id = await db.get(playerNicknames[similarity.index]);
-				message.channel.send(nickname + " is close to " + playerNicknames[similarity.index] + " with a " + similarity.rating * 100 + "% similarity.")
+				if(similarity.rating == 1){
+					message.channel.send(`No, you know your right I'm not going to say how close you where. So I'm just going to get it for you.`);
+					
+				} else {
+					message.channel.send(`I'm not sure who ${nickname} is but it seems similar to ${similarity.value} with a ${similarity.rating*100}% similarirty`);
+				}
 			} else {
 				id = nickname
 
@@ -352,7 +359,7 @@ var commands = {
 				var similarity = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId)
 				itemId = similarity.value
 				message.channel.send("")
-				var item = items.find(i => i.itemId == itemId || i.name.toLowerCase() == itemId);
+				var item = items.find(i => i.itemId == itemId || i.name == itemId);
 				if (!item) {
 					message.channel.send("Invalid Item: " + itemId);
 					return;
@@ -395,8 +402,13 @@ var commands = {
 	}
 }
 
+/**
+ * 
+ * @param {Array.<String>} array 
+ * @param {String} value 
+ */
 function getCloseset(array, value) {
-	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replaceAll(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
+	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
 	return {
 		value: array[similarity.bestMatchIndex],
@@ -456,7 +468,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).then(console.log).catch(console.error);
 	}
 });
