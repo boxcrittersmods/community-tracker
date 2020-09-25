@@ -218,23 +218,6 @@ async function lookNice(data) {
 				var title = "**Critter Type**";
 				data[key] = data[key] || "hamster";
 				embed.addField(title,getCritterEmoji(data[key]),true);
-				/*switch (data[key]) {
-					case "snail":
-						embed.addField(title, "<:rsnail:701095041426391091>", true)
-						break;
-					case "hamster":
-						embed.addField(title, "<:critterhamster:701095038746362029>", true)
-						break;
-					case "lizard":
-						embed.addField(title, "<:critterlizard:701095041464139847>", true);
-						break;
-					case "beaver":
-						embed.addField(title,"<:critterbeaver:701095038192713738>",true);
-						break;
-					default:
-						field(key);
-						break;
-				}*/
 				break;
 			case "created":
 			case "lastSeen":
@@ -280,6 +263,19 @@ async function lookNice(data) {
 		}
 	}
 	return { embed };
+}
+
+async function getItem(itemId) {
+	var items = await itemList.getJson();
+	var similarity = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId)
+	itemId = similarity.value
+	return items.find(i => i.itemId == itemId || i.name == itemId);
+}
+async function getRoom(roomId) {
+	var rooms = await roomList.getJson()
+	var similarity = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId);
+	roomId = similarity.value;
+	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
 
 function lookUp(url) {
@@ -349,33 +345,23 @@ var commands = {
 	"room": {
 		args: ["roomId or name"], description: "Look up Rooms", call: async function name(message, args) {
 			var roomId = args.join(" ")
-			roomList.getJson().then(async rooms => {
-				var similarity = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId);
-				roomId = similarity.value;
-				var room = rooms.find(r => r.roomId == roomId || r.name == roomId);
-				if (!room) {
-					message.channel.send("Invalid Room: " + room);
-					return;
-				}
-				var nice = await lookNice(room)
-				message.channel.send(nice);
-			});
+			var room = getRoom(roomId);
+			if (!room) {
+				message.channel.send("Invalid Room: " + room);
+				return;
+			}
+			message.channel.send(await lookNice(room));
 		}
 	},
 	"item": {
 		args: ["itemId or name"], description: "Look up Items", call: async function name(message, args) {
 			var itemId = args.join(" ")
-			itemList.getJson().then(async items => {
-				var similarity = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId)
-				itemId = similarity.value
-				message.channel.send("")
-				var item = items.find(i => i.itemId == itemId || i.name == itemId);
-				if (!item) {
-					message.channel.send("Invalid Item: " + itemId);
-					return;
-				}
-				message.channel.send(await lookNice(item));
-			});
+			var item = getItem(itemId);
+			if (!item) {
+				message.channel.send("Invalid Item: " + itemId);
+				return;
+			}
+			message.channel.send(await lookNice(item));
 		}
 	},
 	"settings": {
