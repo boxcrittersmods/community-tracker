@@ -309,7 +309,7 @@ var commands = {
 			var playerNicknames = await db.list();
 			var similarity = getCloseset(playerNicknames, nickname)
 			var id;
-			if (similarity.rating > .3) {
+			if (similarity.rating > .9) {
 				id = await db.get(playerNicknames[similarity.index]);
 				if(similarity.rating == 1){
 					message.channel.send(`No, you know you were right. I'm not going to say how close you were. I'll just get the account for you`);
