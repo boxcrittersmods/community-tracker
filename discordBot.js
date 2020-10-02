@@ -97,15 +97,37 @@ function drawImage(context, url, x, y, w, h) {
 
 	})
 }
+function drawFrame(context,spriteSheet,frame,placement) {
+	//["x", "y", "width", "height", "imageIndex", "regX", "regY"]
+	var frame = spriteSheet.frames[frame];
+	context.drawImage(spriteSheet.images[frame[4]],frame[0]-frame[5],frame[1]-frame[6],frame[2],frame[3],placement.x-placement.regX,placement.y-placement.regY,frame[2],frame[3]);
+}
 
 async function displayRoom(room) {
 	var canvas = Canvas.createCanvas(room.width, room.height);
 	var context = canvas.getContext('2d');
 
 	await drawImage(context, room.background, 0, 0, canvas.width, canvas.height);
-	await drawImage(context, room.foreground, 0, 0, canvas.width, canvas.height);
 
+
+	var spriteSheetFile = Website.Connect(room.spriteSheet);
+	var spriteSheet = await spriteSheetFile.getJson();
+	spriteSheet.images = await Promise.all(spriteSheet.images.map(async url => await Canvas.loadImage(url)))
+
+	var layoutFile = Website.Connect(room.layout);
+	var layout = await layoutFile.getJson();
+
+	var frame = 0;
+	for(let i in layout.playground){
+		var placement = layout.playground[i];
+		var animation = spriteSheet.animations[placement.id];
+		var frame = animation.frames[frame%animation.frames.length]
+		drawFrame(context,spriteSheet,frame,placement);
+	}
+	await drawImage(context, room.foreground, 0, 0, canvas.width, canvas.height);
 	var attachment = new Discord.MessageAttachment(canvas.toBuffer(), room.roomId + ".png")
+
+
 	return attachment;
 }
 
@@ -117,8 +139,6 @@ async function displayPlayer(player) {
 		canvas.width = canvas.height = 128;
 		drawImage(context, "https://cdn.discordapp.com/emojis/701095041426391091.png?v=1", 0, 0, canvas.width, canvas.height)
 	}
-
-
 
 	var items = await itemList.getJson();
 
