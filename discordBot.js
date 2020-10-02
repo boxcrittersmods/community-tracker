@@ -267,14 +267,12 @@ async function lookNice(data) {
 
 async function getItem(itemId) {
 	var items = await itemList.getJson();
-	var similarity = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId)
-	itemId = similarity.value
+	itemId = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId).value;
 	return items.find(i => i.itemId == itemId || i.name == itemId);
 }
 async function getRoom(roomId) {
 	var rooms = await roomList.getJson()
-	var similarity = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId);
-	roomId = similarity.value;
+	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId).value
 	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
 
@@ -345,7 +343,7 @@ var commands = {
 	"room": {
 		args: ["roomId or name"], description: "Look up Rooms", call: async function name(message, args) {
 			var roomId = args.join(" ")
-			var room = getRoom(roomId);
+			var room = await getRoom(roomId);
 			if (!room) {
 				message.channel.send("Invalid Room: " + room);
 				return;
@@ -356,7 +354,7 @@ var commands = {
 	"item": {
 		args: ["itemId or name"], description: "Look up Items", call: async function name(message, args) {
 			var itemId = args.join(" ")
-			var item = getItem(itemId);
+			var item = await getItem(itemId);
 			if (!item) {
 				message.channel.send("Invalid Item: " + itemId);
 				return;
@@ -418,7 +416,9 @@ async function parseCommand(message) {
 	var parts = message.content.split(" ")
 	parts.shift();
 	var commandIds = Object.keys(commands);
-	var cmd = getCloseset(commandIds, parts.shift()).value;
+	var cmd = parts.shift();
+	var similarity = getCloseset(commandIds,cmd);
+	cmd = similarity.value;
 	
 	var currentSettings = await settings.get(message.guild.id);
 	var channelQuery = currentSettings[cmd+"Channel"];
