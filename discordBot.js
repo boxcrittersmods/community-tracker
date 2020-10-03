@@ -283,7 +283,7 @@ async function lookNice(data) {
 				delete data.foreground
 				delete data.background;
 				//embed.attachFiles([{ name: "room.gif", attachment: image.message }]).setImage("attachment://room.gif")
-				embed.setImage("https://api.boxcrittersmods.ga/room/3/" + data.roomId + ".gif")
+				embed.setImage("https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif")
 				break;
 			case "triggers":
 				embed.addField("Triggers", "A format for this is Coming Soon", true);
