@@ -32,8 +32,8 @@ function getCritterEmoji(critterID) {
 	if (critterID == "snail") {
 		return "<:rsnail:701095041426391091>";
 	}
-	if(!boxCutters) return critterID;
 	var boxCutters = client.guilds.get("570411578139344926");
+	if(!boxCutters) return critterID;
 	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
 }
 
