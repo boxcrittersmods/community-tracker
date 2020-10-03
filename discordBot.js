@@ -1,8 +1,6 @@
 const Discord = require("discord.js");
 const Website = require("./website");
-const Canvas = require('canvas');
 var stringSimilarity = require('string-similarity');
-const CanvasGifEncoder = require('gif-encoder-2');
 
 var db = require("./db");
 var settings = require("./settings")
@@ -13,12 +11,10 @@ String.prototype.replaceAll = function (a, b) {
 };
 
 const wikiPages = require("./wikiPages.json");
-const { lcm } = require("mathjs");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
 const client = new Discord.Client();
-//const apt = new CritterAPI();
 
 client.on('ready', () => {
 	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
@@ -88,119 +84,6 @@ async function getWikiUrl(itemId) {
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
-function drawImage(context, url, x, y, w, h) {
-	return new Promise(async (res, rej) => {
-		Canvas.loadImage(url).then(image => {
-			context.drawImage(image, x, y, w, h)
-			res();
-		}).catch(e => {
-			console.log("Error with: " + url)
-			res();
-		});
-
-	})
-}
-function drawFrame(context, spriteSheet, frame, placement) {
-	//["x", "y", "width", "height", "imageIndex", "regX", "regY"]
-	var frame = spriteSheet.frames[frame];
-	context.drawImage(spriteSheet.images[frame[4]], frame[0] - frame[5], frame[1] - frame[6], frame[2], frame[3], placement.x - placement.regX, placement.y - placement.regY, frame[2], frame[3]);
-}
-
-async function displayRoom(room) {
-	var canvas = Canvas.createCanvas(room.width, room.height);
-	var context = canvas.getContext('2d');
-	var gifEncoder = new CanvasGifEncoder(room.width, room.height,'neuquant',true);
-
-	var spriteSheetFile = Website.Connect(room.spriteSheet);
-	var spriteSheet = await spriteSheetFile.getJson();
-	spriteSheet.images = await Promise.all(spriteSheet.images.map(async url => await Canvas.loadImage(url)))
-
-	var layoutFile = Website.Connect(room.layout);
-	var layout = await layoutFile.getJson();
-	layout.playground.sort((a,b)=>((b.y-b.regY)-(a.y-a.regY)))
-
-	var gifLength = Object.values(spriteSheet.animations).sort((a,b)=>b.frames.length-a.frames.length)[0].frames.length//Object.values(spriteSheet.animations).map(a => a.frames.length).reduce((gifLength, frameCount) => lcm(gifLength, frameCount))
-	console.log(gifLength);
-
-	gifEncoder.start();
-	for (let f = 0; f < gifLength; f++) {
-		console.log("Frame: ",f+1,"/",gifLength);
-		await drawImage(context, room.background, 0, 0, canvas.width, canvas.height);
-		for (let i in layout.playground) {
-			var placement = layout.playground[i];
-			var animation = spriteSheet.animations[placement.id];
-			var frame = animation.frames[f % animation.frames.length]
-			drawFrame(context, spriteSheet, frame, placement);
-		}
-		await drawImage(context, room.foreground, 0, 0, canvas.width, canvas.height);
-		gifEncoder.addFrame(context);
-	}
-	gifEncoder.finish();
-	//var attachment = new Discord.MessageAttachment(canvas.toBuffer(), room.roomId + ".png")
-	var attachment = new Discord.MessageAttachment(gifEncoder.out.getData(), room.roomId + ".gif")
-
-
-	return attachment;
-}
-
-async function displayPlayer(player) {
-
-	var canvas = Canvas.createCanvas(340, 400);
-	var context = canvas.getContext('2d');
-	if (player.critterId == "snail") {
-		canvas.width = canvas.height = 128;
-		drawImage(context, "https://cdn.discordapp.com/emojis/701095041426391091.png?v=1", 0, 0, canvas.width, canvas.height)
-	}
-
-	var items = await itemList.getJson();
-
-	var rules = {
-		hideNose: false,
-		hideEars: false
-	}
-
-	var gearSlots = player.gear.map(g => {
-		var item = items.find(i => i.itemId == g);
-		for (const rule in rules) {
-			rules[rule] = rules[rule] | item[rule]
-		}
-		return item.slot;
-	})
-
-	var layers = ["feet", "back.ride", "tail", "back.hand", "back.eyes", "back.ears", "back.head", "back.neck", "back.fuzz", "back.pack", "back.belt", "back.body", "back.mask", "body", "ears", "face", "slots.mask", "slots.body", "slots.belt", "slots.pack", "slots.fuzz", "slots.neck", "slots.head", "slots.ears", "slots.eyes", "nose", "slots.hand", "slots.ride"]
-	for (var layer of layers) {
-		switch (layer) {
-			case "tail":
-			case "body":
-			case "ears":
-			case "face":
-			case "nose":
-			case "feet":
-				if (layer == "nose" && rules.hideNose) break;
-				if (layer == "ears" && rules.hideEars) break;
-				var url = `https://media.boxcritters.com/critters/${player.critterId}/${layer}.png`
-				await drawImage(context, url, 0, 0, canvas.width, canvas.height)
-
-				break;
-			default: //Items
-				var layerParts = layer.split(".");
-				var position = layerParts[0].replace("slots", "front");
-				var slot = layerParts[1];
-				var gearId = gearSlots.indexOf(slot)
-				if (gearId == -1) continue;
-				var gear = player.gear[gearId];
-				var url = `https://media.boxcritters.com/items/${gear}/${position}.png`;
-				await drawImage(context, url, 0, 0, canvas.width, canvas.height)
-
-				break;
-		}
-	}
-
-	var attachment = new Discord.MessageAttachment(canvas.toBuffer(), "player.png")
-	return attachment;
-
-}
-
 async function lookNice(data) {
 	var embed = new Discord.RichEmbed()
 		.setColor(0x55cc11);
@@ -237,6 +120,10 @@ async function lookNice(data) {
 		data.gear = data.gear || [];
 	}
 
+	if(data.background||data.foreground){
+		embed.setImage("https://api.boxcrittersmods.ga/room/1/" + data.roomId + ".png")
+	}
+
 	for (const key in data) {
 		//if(typeof(data[key]) == "object") continue;
 		switch (key) {
@@ -262,8 +149,6 @@ async function lookNice(data) {
 				break;
 			case "gear":
 				//Gear Display
-				//var image = await displayPlayer(data);
-				//embed.attachFiles([{ name: "player.png", attachment: image.message }]).setThumbnail("attachment://player.png")
 				embed.attachFiles([{ name: "player.png", attachment: "https://api.boxcrittersmods.ga/player/" + data.playerId + ".png" }]).setImage("attachment://player.png")
 
 				//Gear List
@@ -274,19 +159,17 @@ async function lookNice(data) {
 				data[key] = data[key].join("\n");
 				field(key);
 				break;
+			case "spriteSheet":
+				var sprites = await (Website.Connect(data[key])).getJson();;
+				embed.addField("SpriteSheet",sprites.images.join("\n"))
+				embed.addField("Sprites",data[key])
+				embed.addField("Animation","https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif")
+				break;
 			case "icon":
 				embed.setThumbnail(data[key])
 				break;
-			case "background":
-			case "foreground":
-				//var image = await displayRoom(data);
-				delete data.foreground
-				delete data.background;
-				//embed.attachFiles([{ name: "room.gif", attachment: image.message }]).setImage("attachment://room.gif")
-				embed.setImage("https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif")
-				break;
 			case "triggers":
-				embed.addField("Triggers", "A format for this is Coming Soon", true);
+				embed.addField("Triggers", data[key].map(JSON.stringify).join("\n"));
 			break;
 			case "sprites":
 				embed.setImage(data[key]);
@@ -387,7 +270,7 @@ var commands = {
 			}
 			message.channel.send(await lookNice(room));
 			if(room.music) {
-				message.channel.send({files:[{name:"room.mp3",attachment:room.music}]})
+				message.channel.send({file:room.music})
 			}
 		}
 	},
@@ -504,7 +387,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(console.error);
 	}
 });
