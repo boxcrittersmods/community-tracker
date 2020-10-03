@@ -108,7 +108,7 @@ function drawFrame(context, spriteSheet, frame, placement) {
 async function displayRoom(room) {
 	var canvas = Canvas.createCanvas(room.width, room.height);
 	var context = canvas.getContext('2d');
-	var gifEncoder = new CanvasGifEncoder(room.width, room.height);
+	var gifEncoder = new CanvasGifEncoder(room.width, room.height,'neuquant',true);
 
 	var spriteSheetFile = Website.Connect(room.spriteSheet);
 	var spriteSheet = await spriteSheetFile.getJson();
@@ -277,10 +277,11 @@ async function lookNice(data) {
 				break;
 			case "background":
 			case "foreground":
-				var image = await displayRoom(data);
+				//var image = await displayRoom(data);
 				delete data.foreground
 				delete data.background;
-				embed.attachFiles([{ name: "room.gif", attachment: image.message }]).setImage("attachment://room.gif")
+				//embed.attachFiles([{ name: "room.gif", attachment: image.message }]).setImage("attachment://room.gif")
+				embed.setImage("https://api.boxcrittersmods.ga/room/3/" + data.roomId + ".gif")
 				break;
 			case "triggers":
 				embed.addField("Triggers", "A format for this is Coming Soon", true);
@@ -502,7 +503,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(console.error);
 	}
 });
