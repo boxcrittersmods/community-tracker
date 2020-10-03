@@ -1,17 +1,19 @@
 const Discord = require("discord.js");
 const Website = require("./website");
 const Canvas = require('canvas');
+var stringSimilarity = require('string-similarity');
+const CanvasGifEncoder = require('gif-encoder-2');
+
 var db = require("./db");
 var settings = require("./settings")
-var stringSimilarity = require('string-similarity');
 //const CritterAPI = require("./critterapi/critterapi.js")
 
-String.prototype.replaceAll = function (a,b){
+String.prototype.replaceAll = function (a, b) {
 	return this.split(a).join(b)
 };
 
 const wikiPages = require("./wikiPages.json");
-const { getBase64 } = require("jimp");
+const { lcm } = require("mathjs");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
@@ -31,11 +33,11 @@ async function getItemName(itemId) {
 }
 
 function getCritterEmoji(critterID) {
-	if(critterID=="snail") { 
+	if (critterID == "snail") {
 		return "<:rsnail:701095041426391091>";
 	}
 	var boxCutters = client.guilds.get("570411578139344926");
-	return boxCutters.emojis.find(emoji=>emoji.name.toLowerCase()==="critter"+critterID.toLowerCase());
+	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
 }
 
 function timeSince(date) {
@@ -97,18 +99,16 @@ function drawImage(context, url, x, y, w, h) {
 
 	})
 }
-function drawFrame(context,spriteSheet,frame,placement) {
+function drawFrame(context, spriteSheet, frame, placement) {
 	//["x", "y", "width", "height", "imageIndex", "regX", "regY"]
 	var frame = spriteSheet.frames[frame];
-	context.drawImage(spriteSheet.images[frame[4]],frame[0]-frame[5],frame[1]-frame[6],frame[2],frame[3],placement.x-placement.regX,placement.y-placement.regY,frame[2],frame[3]);
+	context.drawImage(spriteSheet.images[frame[4]], frame[0] - frame[5], frame[1] - frame[6], frame[2], frame[3], placement.x - placement.regX, placement.y - placement.regY, frame[2], frame[3]);
 }
 
 async function displayRoom(room) {
 	var canvas = Canvas.createCanvas(room.width, room.height);
 	var context = canvas.getContext('2d');
-
-	await drawImage(context, room.background, 0, 0, canvas.width, canvas.height);
-
+	var gifEncoder = new CanvasGifEncoder(room.width, room.height);
 
 	var spriteSheetFile = Website.Connect(room.spriteSheet);
 	var spriteSheet = await spriteSheetFile.getJson();
@@ -116,16 +116,27 @@ async function displayRoom(room) {
 
 	var layoutFile = Website.Connect(room.layout);
 	var layout = await layoutFile.getJson();
+	layout.playground.sort((a,b)=>((b.y-b.regY)-(a.y-a.regY)))
 
-	var frame = 0;
-	for(let i in layout.playground){
-		var placement = layout.playground[i];
-		var animation = spriteSheet.animations[placement.id];
-		var frame = animation.frames[frame%animation.frames.length]
-		drawFrame(context,spriteSheet,frame,placement);
+	var gifLength = Object.values(spriteSheet.animations).sort((a,b)=>b.frames.length-a.frames.length)[0].frames.length//Object.values(spriteSheet.animations).map(a => a.frames.length).reduce((gifLength, frameCount) => lcm(gifLength, frameCount))
+	console.log(gifLength);
+
+	gifEncoder.start();
+	for (let f = 0; f < gifLength; f++) {
+		console.log("Frame: ",f+1,"/",gifLength);
+		await drawImage(context, room.background, 0, 0, canvas.width, canvas.height);
+		for (let i in layout.playground) {
+			var placement = layout.playground[i];
+			var animation = spriteSheet.animations[placement.id];
+			var frame = animation.frames[f % animation.frames.length]
+			drawFrame(context, spriteSheet, frame, placement);
+		}
+		await drawImage(context, room.foreground, 0, 0, canvas.width, canvas.height);
+		gifEncoder.addFrame(context);
 	}
-	await drawImage(context, room.foreground, 0, 0, canvas.width, canvas.height);
-	var attachment = new Discord.MessageAttachment(canvas.toBuffer(), room.roomId + ".png")
+	gifEncoder.finish();
+	//var attachment = new Discord.MessageAttachment(canvas.toBuffer(), room.roomId + ".png")
+	var attachment = new Discord.MessageAttachment(gifEncoder.out.getData(), room.roomId + ".gif")
 
 
 	return attachment;
@@ -191,7 +202,8 @@ async function displayPlayer(player) {
 
 async function lookNice(data) {
 	var embed = new Discord.RichEmbed()
-		.setColor(0x55cc11)
+		.setColor(0x55cc11);
+	var message = {embed,files:[]}
 	function field(key) {
 		var value = data[key];
 		var type = typeof (value);
@@ -237,7 +249,7 @@ async function lookNice(data) {
 			case "critterId":
 				var title = "**Critter Type**";
 				data[key] = data[key] || "hamster";
-				embed.addField(title,getCritterEmoji(data[key]),true);
+				embed.addField(title, getCritterEmoji(data[key]), true);
 				break;
 			case "created":
 			case "lastSeen":
@@ -268,8 +280,11 @@ async function lookNice(data) {
 				var image = await displayRoom(data);
 				delete data.foreground
 				delete data.background;
-				embed.attachFiles([{ name: "room.png", attachment: image.message }]).setImage("attachment://room.png")
+				embed.attachFiles([{ name: "room.gif", attachment: image.message }]).setImage("attachment://room.gif")
 				break;
+			case "triggers":
+				embed.addField("Triggers", "A format for this is Coming Soon", true);
+			break;
 			case "sprites":
 				embed.setImage(data[key]);
 				break;
@@ -282,7 +297,7 @@ async function lookNice(data) {
 				break;
 		}
 	}
-	return { embed };
+	return message;
 }
 
 async function getItem(itemId) {
@@ -329,11 +344,11 @@ var commands = {
 			var id;
 			if (similarity.rating > .9) {
 				id = await db.get(playerNicknames[similarity.index]);
-				if(similarity.rating == 1){
+				if (similarity.rating == 1) {
 					message.channel.send(`No, you know you were right. I'm not going to say how close you were. I'll just get the account for you`);
-					
+
 				} else {
-					message.channel.send(`I'm not sure who ${nickname} is but it seems similar to ${similarity.value} with a ${similarity.rating*100}% similarirty`);
+					message.channel.send(`I'm not sure who ${nickname} is but it seems similar to ${similarity.value} with a ${similarity.rating * 100}% similarirty`);
 				}
 			} else {
 				id = nickname
@@ -369,6 +384,9 @@ var commands = {
 				return;
 			}
 			message.channel.send(await lookNice(room));
+			if(room.music) {
+				message.channel.send({files:[{name:"room.mp3",attachment:room.music}]})
+			}
 		}
 	},
 	"item": {
@@ -385,32 +403,32 @@ var commands = {
 	"settings": {
 		args: ["set/reset", "key", "(value)"],
 		description: "Set server specific bot settings",
-		call:async function (message, args) {
+		call: async function (message, args) {
 			var serverId = message.guild.id;
 			var serverName = message.guild.name;
 			var currentSettings = await settings.get(serverId);
 			var key = args.shift();
 			var value = args.shift();
 
-			if(key == "reset") {
+			if (key == "reset") {
 				await settings.reset(serverId);
 				message.channel.send(`Reset settings for ${serverName}`)
 
-			} else if(value) {
+			} else if (value) {
 				message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
 				currentSettings[key] = value;
 				message.channel.send(`${serverName}.\`${key}\`=\`${value}\``);
-				await settings.set(serverId,currentSettings);
+				await settings.set(serverId, currentSettings);
 			}
 
-			
+
 			var embed = new Discord.RichEmbed();
 			embed.setTitle("Settings for " + serverName);
-			if(Object.keys(currentSettings).length==0)embed.setDescription("No Settings")
+			if (Object.keys(currentSettings).length == 0) embed.setDescription("No Settings")
 			for (const k in currentSettings) {
-				if(!key||k==key) embed.addField(k[0].toUpperCase() + k.substring(1),"```" + JSON.stringify(currentSettings[k],null,2) + "```");
+				if (!key || k == key) embed.addField(k[0].toUpperCase() + k.substring(1), "```" + JSON.stringify(currentSettings[k], null, 2) + "```");
 			}
-			message.channel.send({embed})	
+			message.channel.send({ embed })
 
 		}
 	}
@@ -437,37 +455,37 @@ async function parseCommand(message) {
 	parts.shift();
 	var commandIds = Object.keys(commands);
 	var cmd = parts.shift();
-	var similarity = getCloseset(commandIds,cmd);
+	var similarity = getCloseset(commandIds, cmd);
 	cmd = similarity.value;
-	
+
 	var currentSettings = await settings.get(message.guild.id);
-	var channelQuery = currentSettings[cmd+"Channel"];
-	if(channelQuery){
-		let chId = channelQuery.replace(/\D/g,'');
-		if(message.channel.id!=chId) {
+	var channelQuery = currentSettings[cmd + "Channel"];
+	if (channelQuery) {
+		let chId = channelQuery.replace(/\D/g, '');
+		if (message.channel.id != chId) {
 			let embed = new Discord.RichEmbed()
-			.setTitle("IncorectChannel")
-			.setColor(0xff0000)
-			.setDescription("No go to " + channelQuery);
-			var msg = await message.channel.send({embed});
-			setTimeout(()=>{
+				.setTitle("IncorectChannel")
+				.setColor(0xff0000)
+				.setDescription("No go to " + channelQuery);
+			var msg = await message.channel.send({ embed });
+			setTimeout(() => {
 				msg.delete();
-			},3000);
+			}, 3000);
 			return;
 		}
 	}
-	var roleQuery = currentSettings[cmd+"Permissions"];
-	if(roleQuery) {
-		let rlId = roleQuery.replace(/\D/g,'');
-		if(!message.member.roles.has(rlId)) {
+	var roleQuery = currentSettings[cmd + "Permissions"];
+	if (roleQuery) {
+		let rlId = roleQuery.replace(/\D/g, '');
+		if (!message.member.roles.has(rlId)) {
 			let embed = new Discord.RichEmbed()
-			.setTitle("You are unautherised to use this command")
-			.setColor(0xff0000)
-			.setDescription("Only " + roleQuery + " can use this command");
-			var msg = await message.channel.send({embed});
-			setTimeout(()=>{
+				.setTitle("You are unautherised to use this command")
+				.setColor(0xff0000)
+				.setDescription("Only " + roleQuery + " can use this command");
+			var msg = await message.channel.send({ embed });
+			setTimeout(() => {
 				msg.delete();
-			},3000);
+			}, 3000);
 			return;
 		}
 	}
@@ -485,7 +503,7 @@ client.on('message', message => {
 		return;
 	}
 	if (message.content.toLowerCase().startsWith('!bc')) {
-		parseCommand(message).then(console.log).catch(console.error);
+		parseCommand(message).catch(console.error);
 	}
 });
 
