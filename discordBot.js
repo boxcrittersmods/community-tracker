@@ -36,6 +36,7 @@ function getCritterEmoji(critterID) {
 	if (critterID == "snail") {
 		return "<:rsnail:701095041426391091>";
 	}
+	if(!boxCutters) return critterID;
 	var boxCutters = client.guilds.get("570411578139344926");
 	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
 }
@@ -63,7 +64,7 @@ function timeSince(date) {
 			output.push(value + " day" + (value == 1 ? "" : "s"));
 		}
 		interval = (seconds / 3600) % 24;
-		if (interval > 1) {
+		/*if (interval > 1) {
 			var value = Math.floor(interval);
 			output.push(value + " hour" + (value == 1 ? "" : "s"));
 		}
@@ -71,13 +72,13 @@ function timeSince(date) {
 		if (interval > 1) {
 			var value = Math.floor(interval);
 			output.push(value + " minute" + (value == 1 ? "" : "s"));
-		}
+		}*/
 	}
 	if (output.length > 0) {
 		return output.join(", ") + " ago"
 
 	} else {
-		return "now";
+		return "today";
 	}
 }
 
@@ -255,14 +256,15 @@ async function lookNice(data) {
 			case "lastSeen":
 				var date = new Date(data[key])
 				var time = timeSince(date);
-				data[key] = (key == "lastSeen" ? (time == "now" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "Last Online") + " " +
+				data[key] = (key == "lastSeen" ? (time == "today" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "") + " " +
 					`${time} (${date.toDateString()})`;
 				field(key);
 				break;
 			case "gear":
 				//Gear Display
-				var image = await displayPlayer(data);
-				embed.attachFiles([{ name: "player.png", attachment: image.message }]).setThumbnail("attachment://player.png")
+				//var image = await displayPlayer(data);
+				//embed.attachFiles([{ name: "player.png", attachment: image.message }]).setThumbnail("attachment://player.png")
+				embed.attachFiles([{ name: "player.png", attachment: "https://api.boxcrittersmods.ga/player/" + data.playerId + ".png" }]).setImage("attachment://player.png")
 
 				//Gear List
 				data[key] = await Promise.all(data[key].map(async i => {
@@ -290,8 +292,7 @@ async function lookNice(data) {
 				embed.setImage(data[key]);
 				break;
 			case "playerId":
-				data[key] = `[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`
-				field(key);
+				embed.addField("PlayerID",`[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`)
 				break;
 			default:
 				field(key)
