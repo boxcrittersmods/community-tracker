@@ -121,7 +121,7 @@ async function lookNice(data) {
 	}
 
 	if(data.background||data.foreground){
-		embed.setImage("https://api.boxcrittersmods.ga/room/1/" + data.roomId + ".png")
+		embed.setImage("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png")
 	}
 
 	for (const key in data) {
