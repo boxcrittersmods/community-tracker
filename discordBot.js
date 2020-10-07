@@ -121,7 +121,7 @@ async function lookNice(data) {
 	}
 
 	if(data.background||data.foreground){
-		embed.setImage("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png")
+		embed.attachFile("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png")
 	}
 
 	for (const key in data) {
@@ -152,11 +152,11 @@ async function lookNice(data) {
 				embed.attachFiles([{ name: "player.png", attachment: "https://api.boxcrittersmods.ga/player/" + data.playerId + ".png" }]).setImage("attachment://player.png")
 
 				//Gear List
-				data[key] = await Promise.all(data[key].map(async i => {
+				var gearList = await Promise.all(data[key].map(async i => {
 					var wikiUrl = await getWikiUrl(i);
 					return wikiUrl ? `[${i}](${wikiUrl})` : i
 				}));
-				data[key] = data[key].join("\n");
+				data[key] = gearList.join("\n");
 				field(key);
 				break;
 			case "spriteSheet":
@@ -387,7 +387,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(console.error);
 	}
 });
