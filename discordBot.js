@@ -268,9 +268,9 @@ var commands = {
 				message.channel.send("Invalid Room: " + room);
 				return;
 			}
-			message.channel.send(await lookNice(room));
+			await message.channel.send(await lookNice(room));
 			if(room.music) {
-				message.channel.send({file:room.music})
+				await message.channel.send({file:room.music})
 			}
 		}
 	},
