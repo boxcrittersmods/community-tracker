@@ -274,7 +274,7 @@ var commands = {
 
 				} else {
 					message.channel.send(await LANG(message.guild.id,"LOOKUP_SIMILAR",{
-						QUERYE:nickname,
+						QUERY:nickname,
 						NICKNAME:similarity.value,
 						SIMILARITY:similarity.rating * 100
 					}))
