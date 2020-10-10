@@ -127,6 +127,10 @@ async function lookNice(guildId,data) {
 		if(data.theme) data.theme = await LANG(guildId,"ITEM_THEME_"+data.theme.toUpperCase());
 	}
 
+	if(data.roomId) {
+		data.name = await LANG(guildId,"ROOMK_NAME_"+data.roomId.toUpperCase());
+	}
+
 	if(data.background||data.foreground){
 		embed.attachFile("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png")
 	}
@@ -450,7 +454,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!test')) {
+	if (message.content.toLowerCase().startsWith('!bc')) {
 		parseCommand(message).catch(e=>logError(message,e));
 	}
 });
