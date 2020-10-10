@@ -11,7 +11,7 @@ async function getServerLang(guildId) {
 }
 
 async function getLangFile(lang) {
-	var file = module.require. LANG_FOLDER + "/" + lang + ".txt"
+	var file = LANG_FOLDER + "/" + lang + ".txt"
 	if(!existsSync(file)) return {};
 	var buffer = await fs.readFile(file);
 	var list = buffer.toString().split("\n").map(item=>{
