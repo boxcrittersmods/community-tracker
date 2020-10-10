@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const Website = require("./website");
 var stringSimilarity = require('string-similarity');
+const { LANG,LANGLIST } = require('./languages.js');
 
 var db = require("./db");
 var settings = require("./settings")
@@ -11,6 +12,7 @@ String.prototype.replaceAll = function (a, b) {
 };
 
 const wikiPages = require("./wikiPages.json");
+const languages = require("./languages.js");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
@@ -25,6 +27,7 @@ client.on('ready', () => {
 async function getItemName(itemId) {
 	var items = await itemList.getJson();
 	var item = items.find(i => i.itemId == itemId || i.name == itemId)
+	if(!item) return;
 	return item.name;
 }
 
@@ -37,44 +40,37 @@ function getCritterEmoji(critterID) {
 	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
 }
 
-function timeSince(date) {
+async function timeSince(guildId,date) {
 
 	var seconds = Math.floor((new Date() - date) / 1000);
 
 	var interval = seconds / 31536000;
 
-	var output = [];
+	var output = {}
 
 	if (interval > 1) {
-		var value = Math.floor(interval);
-		output.push(value + " year" + (value == 1 ? "" : "s"));
+		output.YEARS_VALUE = Math.floor(interval);
 	}
 	interval = (seconds / 2592000) % 12;
 	if (interval > 1) {
-		var value = Math.floor(interval);
-		output.push(value + " month" + (value == 1 ? "" : "s"));
+		output.MONTHS_VALUE = Math.floor(interval);
 	} else {
 		interval = seconds / 86400;
 		if (interval > 1) {
-			var value = Math.floor(interval);
-			output.push(value + " day" + (value == 1 ? "" : "s"));
+			output.DAYS_VALUE = Math.floor(interval);
 		}
-		interval = (seconds / 3600) % 24;
-		/*if (interval > 1) {
-			var value = Math.floor(interval);
-			output.push(value + " hour" + (value == 1 ? "" : "s"));
-		}
-		interval = (seconds / 60) % 60;
-		if (interval > 1) {
-			var value = Math.floor(interval);
-			output.push(value + " minute" + (value == 1 ? "" : "s"));
-		}*/
 	}
-	if (output.length > 0) {
-		return output.join(", ") + " ago"
+	if (Object.keys(output).length > 0) {
+		//return "hmm" + " ago"
+		Object.assign(output,{
+			YEARS_LABEL:(output.YEARS_VALUE==1?await LANG(guildId,"TIME_YEARS_LABEL_SINGULAR"):await LANG(guildId,"TIME_YEARS_LABEL_PLURAL")),
+			MONTHS_LABEL:(output.MONTHS_VALUE==1?await LANG(guildId,"TIME_MONTHS_LABEL_SINGULAR"):await LANG(guildId,"TIME_MONTHS_LABEL_PLURAL")),
+			DAYS_LABEL:(output.DAYS_VALUE==1?await LANG(guildId,"TIME_DAYS_LABEL_SINGULAR"):await LANG(guildId,"TIME_DAYS_LABEL_PLURAL"))
+		})
+		return await LANG(guildId,"TIME_SINCE_" + (output.YEARS_VALUE?"Y":"")+(output.MONTHS_VALUE?"M":"")+(output.DAYS_VALUE?"D":""),output)
 
 	} else {
-		return "today";
+		return await LANG(guildId,"TIME_TODAY");
 	}
 }
 
@@ -84,11 +80,13 @@ async function getWikiUrl(itemId) {
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
-async function lookNice(data) {
+const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+
+async function lookNice(guildId,data) {
 	var embed = new Discord.RichEmbed()
 		.setColor(0x55cc11);
 	var message = {embed,files:[]}
-	function field(key) {
+	async function field(key) {
 		var value = data[key];
 		var type = typeof (value);
 		var boolean = type == "boolean"
@@ -96,11 +94,15 @@ async function lookNice(data) {
 			value = value ? "✅" : "❌";
 		}
 		if (!value) return;
-		key = key.replace("is", "");
-		key = key.replace("gear", "Current Gear");
-		key = key.replace("lastSeen", "Last Seen");
-		key = key.replace("Team", "Team Member");
-		key = key.replace("Approved", "Nickname Approved");
+		//key = key.replace("is", "");
+		/*key = key.replace("gear", await LANG(guildId,"USER_CURRENT_GEAR"));
+		key = key.replace("lastSeen", await LANG(guildId,"USER_LAST_SEEN"));
+		key = key.replace("Team", await LANG(guildId,"USER_TEAM"));
+		key = key.replace("Approved", await LANG(guildId,"USER_APPROVED"));
+		key = key.replace("Member", await LANG(guildId,"USER_MEMBER"));
+		key = key.replace("Banned", await LANG(guildId,"USER_BANNED"));
+		key = key.replace("created", await LANG(guildId,"USER_CREATED"));*/
+		key = await LANG(guildId,"FIELD_"+camelToSnakeCase(key).toUpperCase());
 		key = key.charAt(0).toUpperCase() + key.substr(1)
 		embed.addField("**" + key + "**", value, ["boolean", "number"].includes(type))
 	}
@@ -108,16 +110,21 @@ async function lookNice(data) {
 	if (data.nickname) {
 		var mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"]
 		if (!data.isApproved) {
-			data.nickname = "Hamster"
+			data.nickname = await LANG(guildId,"USER_HIDDEN_NICKNAME")
 		}
 		if (mascots.includes(data.nickname)) {
-			data.nickname = `Mascot: ${data.nickname}`
+			data.nickname = await LANG(guildId,"USER_LABEL_MASCOT") + `: ${data.nickname}`
 		} else {
-			data.nickname = `Player: ${data.nickname}`
+			data.nickname = await LANG(guildId,"USER_LABEL_PLAYER") + `: ${data.nickname}`
 		}
 
 		data.isApproved = data.isApproved || false;
 		data.gear = data.gear || [];
+	}
+	if(data.itemId) {
+		data.name = await LANG(guildId,"ITEM_NAME_"+data.itemId.toUpperCase());
+		if(data.slot) data.slot = await LANG(guildId,"ITEM_SLOT_"+data.slot.toUpperCase());
+		if(data.theme) data.theme = await LANG(guildId,"ITEM_THEME_"+data.theme.toUpperCase());
 	}
 
 	if(data.background||data.foreground){
@@ -125,6 +132,7 @@ async function lookNice(data) {
 	}
 
 	for (const key in data) {
+
 		//if(typeof(data[key]) == "object") continue;
 		switch (key) {
 			case "name":
@@ -135,17 +143,31 @@ async function lookNice(data) {
 				}
 				break;
 			case "critterId":
-				var title = "**Critter Type**";
+				var title = "**" + await LANG(guildId,"FIELD_CRITTER_ID") + "**";
 				data[key] = data[key] || "hamster";
 				embed.addField(title, getCritterEmoji(data[key]), true);
 				break;
 			case "created":
 			case "lastSeen":
+				const monthNames = await Promise.all(new Array(26).fill("").map(async(_,n)=>(await LANG(guildId,"TIME_MONTH_"+n))));
+				const dayNames = await Promise.all(new Array(6).fill("").map(async(_,n)=>(await LANG(guildId,"TIME_DAY_"+n))));
+				var zero = (n)=>n<10?"0"+n:n;
 				var date = new Date(data[key])
-				var time = timeSince(date);
-				data[key] = (key == "lastSeen" ? (time == "today" ? "🟢 " : "🔴 ") : "") + (key.charAt(0).toUpperCase() + key.substr(1)).replace("LastSeen", "") + " " +
-					`${time} (${date.toDateString()})`;
-				field(key);
+				var dateString = await LANG(guildId,"TIME_DATESTRING",{
+					DDD:dayNames[date.getDay()],
+					DD:zero(date.getDate()),//01-31
+					D:date.getDate(),//1-31
+					MMM:monthNames[date.getMonth()],
+					MM:zero(date.getMonth()),
+					M:date.getMonth(),
+					YYYY:date.getFullYear(),
+					YY:zero(date.getFullYear()-2000),
+					Y:date.getFullYear()-2000
+				})
+				var time = await timeSince(guildId,date);
+				data[key] = (key == "lastSeen" ? (time == await LANG(guildId,"TIME_TODAY") ? "🟢 " : "🔴 ") : "") + await LANG(guildId,"TIME_LABEL_"+camelToSnakeCase(key).toUpperCase()) + " " +
+					`${time} (${dateString})`;
+				await field(key);
 				break;
 			case "gear":
 				//Gear Display
@@ -157,28 +179,28 @@ async function lookNice(data) {
 					return wikiUrl ? `[${i}](${wikiUrl})` : i
 				}));
 				data[key] = gearList.join("\n");
-				field(key);
+				await field(key);
 				break;
 			case "spriteSheet":
 				var sprites = await (Website.Connect(data[key])).getJson();;
-				embed.addField("SpriteSheet",sprites.images.join("\n"))
-				embed.addField("Sprites",data[key])
-				embed.addField("Animation","https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif")
+				embed.addField(await LANG(guildId,"FIELD_SPRITE_SHEET"),sprites.images.join("\n"))
+				embed.addField(await LANG(guildId,"FIELD_SPRITES"),data[key])
+				embed.addField(await LANG(guildId,"FIELD_ANIMATION"),"https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif")
 				break;
 			case "icon":
 				embed.setThumbnail(data[key])
 				break;
 			case "triggers":
-				embed.addField("Triggers", data[key].map(JSON.stringify).join("\n"));
+				embed.addField(await LANG(guildId,"FIELD_TRIGGERS"), data[key].map(JSON.stringify).join("\n"));
 			break;
 			case "sprites":
 				embed.setImage(data[key]);
 				break;
 			case "playerId":
-				embed.addField("PlayerID",`[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`)
+				embed.addField(await LANG(guildId,"FIELD_PLAYER_ID"),`[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`)
 				break;
 			default:
-				field(key)
+				await field(key)
 				break;
 		}
 	}
@@ -200,48 +222,66 @@ function lookUp(url) {
 	return Website.Connect(url).getText();
 }
 
+Array.prototype.mapAsync = function(func,context) {
+	return Promise.all(this.map(func,context));
+}
+
 var commands = {
 	"ping": {
-		args: [], description: "Test command", call: async function (message, args) {
-			message.channel.send("yay!");
+		args: [], call: async function (message, args) {
+			message.channel.send(await LANG(message.guild.id,"PING_RESPONSE"));
 		}
 	},
 	"echo": {
-		args: ["message"], description: "Says what you say", call: async function (message, args) {
+		args: ["message"], call: async function (message, args) {
 			message.channel.send(args.join(" "))
 		}
 	},
 	"invite": {
-		args: [], description: "Share the bot", call: async function (message, args) {
+		args: [], call: async function (message, args) {
 			message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 		}
 	},
 	"help": {
-		args: [], description: "Lists help commands", call: async function (message, args) {
-			message.channel.send("Commands: ```" + Object.keys(commands).map(c => "!bc " + c + " " + commands[c].args.map(a => !a.includes("(") ? "[" + a + "]" : a).join(" ") + " - " + commands[c].description).join("\n") + "```Want specific help?: https://discord.gg/D2ZpRUW");
+		args: [], call: async function (message, args) {
+			var list = await Object.keys(commands).mapAsync(async c => {
+				var description = await LANG(message.guild.id,"CMD_"+c.toUpperCase()+"_DESC");
+				var args = await commands[c].args.mapAsync(async a => {
+					a = await LANG(message.guild.id,"CMD_"+c.toUpperCase()+"_ARG_"+a.toUpperCase())
+					return !a.includes("(") ? "[" + a + "]" : a
+				});
+				return "!bc " + c + (args.length>0?" ":"") + args.join(" ") + " - " + description;
+			})
+			var header = await LANG(message.guild.id,"HELP_HEADER")
+			var footer = await LANG(message.guild.id,"HELP_FOOTER",{LINK:"https://discord.gg/D2ZpRUW"})
+			message.channel.send(header+"\n```" + list.join("\n") + "```\n"+footer);
 		}
 	},
 	"lookup": {
-		args: ["nickname/playerId"], description: "Look up players", call: async function (message, args) {
+		args: ["playerid"], call: async function (message, args) {
 			var nickname = args.join(" ");
 			var playerNicknames = await db.list();
 			var similarity = getCloseset(playerNicknames, nickname)
 			var id;
-			if (similarity.rating > .9) {
+			if (similarity.rating > .7) {
 				id = await db.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
-					message.channel.send(`No, you know you were right. I'm not going to say how close you were. I'll just get the account for you`);
+					message.channel.send(await LANG(message.guild.id,"LOOKUP_100"));
 
 				} else {
-					message.channel.send(`I'm not sure who ${nickname} is but it seems similar to ${similarity.value} with a ${similarity.rating * 100}% similarirty`);
+					message.channel.send(await LANG(message.guild.id,"LOOKUP_SIMILAR",{
+						QUERYE:nickname,
+						NICKNAME:similarity.value,
+						SIMILARITY:similarity.rating * 100
+					}))
 				}
 			} else {
 				id = nickname
 
 			}
 
-			function invalidError() {
-				message.channel.send("Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type `world.player.playerId` into the developer console.")
+			async function invalidError() {
+				message.channel.send(await LANG(message.guild.id,"LOOKUP_ERROR_INVALID",{COMMAND:"`world.player.playerId`"}))
 			}
 
 			lookUp("https://boxcritters.com/data/player/" + id).then(async (body) => {
@@ -253,41 +293,43 @@ var commands = {
 				}
 				if (!await db.get(data.nickname)) {
 					await db.add(id, data.nickname);
-					message.channel.send(data.nickname + " has been saved to the database as " + id + ". You can now use the nickname to look up this player.");
+					message.channel.send(await LANG(message.guild.id,"LOOKUP_SAVED",{
+						NICKNAME:data.nickname,
+						ID:id
+					}))
 				}
 				data.critterId = data.critterId || "hamster";
-				message.channel.send(await lookNice(data));
+				message.channel.send(await lookNice(message.guild.id,data));
 			});
 		}
 	},
 	"room": {
-		args: ["roomId or name"], description: "Look up Rooms", call: async function name(message, args) {
+		args: ["roomid"], call: async function name(message, args) {
 			var roomId = args.join(" ")
 			var room = await getRoom(roomId);
 			if (!room) {
-				message.channel.send("Invalid Room: " + room);
+				message.channel.send(await LANG(message.guild.id,"ROOM_INVALID",{ROOM:room}));
 				return;
 			}
-			await message.channel.send(await lookNice(room));
+			await message.channel.send(await lookNice(message.guild.id,room));
 			if(room.music) {
 				await message.channel.send({file:room.music})
 			}
 		}
 	},
 	"item": {
-		args: ["itemId or name"], description: "Look up Items", call: async function name(message, args) {
+		args: ["itemid"], call: async function name(message, args) {
 			var itemId = args.join(" ")
 			var item = await getItem(itemId);
 			if (!item) {
-				message.channel.send("Invalid Item: " + itemId);
+				message.channel.send(await LANG(message.guild.id,"ITEM_INVALID",{ITEM:item}));
 				return;
 			}
-			message.channel.send(await lookNice(item));
+			message.channel.send(await lookNice(message.guild.id,item));
 		}
 	},
 	"settings": {
-		args: ["set/reset", "key", "(value)"],
-		description: "Set server specific bot settings",
+		args: ["action", "key", "value"],
 		call: async function (message, args) {
 			var serverId = message.guild.id;
 			var serverName = message.guild.name;
@@ -297,10 +339,15 @@ var commands = {
 
 			if (key == "reset") {
 				await settings.reset(serverId);
-				message.channel.send(`Reset settings for ${serverName}`)
-
+				message.channel.send(await LANG(message.guild.id,"SETTINGS_RESET",{SERVER:serverName}))
 			} else if (value) {
-				message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
+				message.channel.send(await LANG(message.guild.id,"SETTINGS_SET",{
+					KEY:"`"+key+"`",
+					OLDVALUE:"`"+currentSettings[key]+"`",
+					NEWVALUE:"`"+value+"`",
+					SERVER:+serverName
+				}))
+				//message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
 				currentSettings[key] = value;
 				message.channel.send(`${serverName}.\`${key}\`=\`${value}\``);
 				await settings.set(serverId, currentSettings);
@@ -308,13 +355,20 @@ var commands = {
 
 
 			var embed = new Discord.RichEmbed();
-			embed.setTitle("Settings for " + serverName);
-			if (Object.keys(currentSettings).length == 0) embed.setDescription("No Settings")
+			embed.setTitle(await LANG(message.guild.id,"SETTINGS_HEADER",{SERVER:serverName}));
+			if (Object.keys(currentSettings).length == 0) embed.setDescription(await LANG(message.guild.id,"SETTINGS_NONE"))
 			for (const k in currentSettings) {
 				if (!key || k == key) embed.addField(k[0].toUpperCase() + k.substring(1), "```" + JSON.stringify(currentSettings[k], null, 2) + "```");
 			}
 			message.channel.send({ embed })
 
+		}
+	},
+	"language":{
+		args:[],
+		call:async function(message,args) {
+			var list = await LANGLIST();
+			message.channel.send("`"+list.join("`, `")+"`")
 		}
 	}
 }
@@ -349,9 +403,9 @@ async function parseCommand(message) {
 		let chId = channelQuery.replace(/\D/g, '');
 		if (message.channel.id != chId) {
 			let embed = new Discord.RichEmbed()
-				.setTitle("IncorectChannel")
+				.setTitle(await LANG(message.guild.id,"PERMISSIONS_CHANNEL_WRONG_TITLE"))
 				.setColor(0xff0000)
-				.setDescription("No go to " + channelQuery);
+				.setDescription(await LANG(message.guild.id,"PERMISSIONS_CHANNEL_WRONG_TEXT",{CHANNEL:channelQuery}));
 			var msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
@@ -366,7 +420,7 @@ async function parseCommand(message) {
 			let embed = new Discord.RichEmbed()
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
-				.setDescription("Only " + roleQuery + " can use this command");
+				.setDescription(await LANG(message.guild.id,"PERMISSIONS_ROLE_WRONG_TEXT",{ROLE:roleQuery}));
 			var msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
@@ -376,19 +430,28 @@ async function parseCommand(message) {
 	}
 
 	if (!commands[cmd]) {
-		console.log("Invalid command " + cmd);
+		console.log(await LANG(message.guild.id,"CMD_INVALID",{COMMAND:cmd}));
 		return;
 	}
 	await commands[cmd].call(message, parts)
 }
 
+async function logError(message = {},e){
+	console.log(e);
+	if(!message) return;
+	message.reply = message.reply||message.channel.send;
+	message.reply(await LANG(message.guild.id,"CMD_ERROR",{
+		STACK:e.stack,
+		BOTDEV:"TumbleGamer#6140"
+	}))
+}
 
 client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
-		parseCommand(message).catch(console.error);
+	if (message.content.toLowerCase().startsWith('!test')) {
+		parseCommand(message).catch(e=>logError(message,e));
 	}
 });
 
