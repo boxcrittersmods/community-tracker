@@ -2,7 +2,7 @@ var settings = require("./settings")
 const fs = require('fs').promises;
 const {existsSync} = require("fs");
 
-var LANG_FOLDER = "lang";
+var LANG_FOLDER = __dirname + "/lang";
 
 async function getServerLang(guildId) {
 	if(!guildId)return "en-gb";
@@ -11,7 +11,7 @@ async function getServerLang(guildId) {
 }
 
 async function getLangFile(lang) {
-	var file = "./" + LANG_FOLDER + "/" + lang + ".txt"
+	var file = module.require. LANG_FOLDER + "/" + lang + ".txt"
 	if(!existsSync(file)) return {};
 	var buffer = await fs.readFile(file);
 	var list = buffer.toString().split("\n").map(item=>{
@@ -22,7 +22,7 @@ async function getLangFile(lang) {
 }
 
 async function LANGLIST() {
-	var list = await (await fs.readdir("./" + LANG_FOLDER + "/")).map(l=>{
+	var list = await (await fs.readdir(LANG_FOLDER + "/")).map(l=>{
 		var parts = l.split(".");
 		parts.pop();
 		return parts.join(".")
