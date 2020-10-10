@@ -394,6 +394,7 @@ function getCloseset(array, value) {
 }
 
 async function parseCommand(message) {
+	message.channel.startTyping();
 	var parts = message.content.split(" ")
 	parts.shift();
 	var commandIds = Object.keys(commands);
@@ -438,6 +439,7 @@ async function parseCommand(message) {
 		return;
 	}
 	await commands[cmd].call(message, parts)
+	message.channel.stopTyping();
 }
 
 async function logError(message = {},e){
