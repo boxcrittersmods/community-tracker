@@ -128,7 +128,7 @@ async function lookNice(guildId,data) {
 	}
 
 	if(data.roomId) {
-		data.name = await LANG(guildId,"ROOMK_NAME_"+data.roomId.toUpperCase());
+		data.name = await LANG(guildId,"ROOM_NAME_"+data.roomId.toUpperCase());
 	}
 
 	if(data.background||data.foreground){
