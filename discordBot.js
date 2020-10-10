@@ -368,7 +368,7 @@ var commands = {
 
 		}
 	},
-	"language":{
+	"languages":{
 		args:[],
 		call:async function(message,args) {
 			var list = await LANGLIST();
