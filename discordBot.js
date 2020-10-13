@@ -262,10 +262,10 @@ var commands = {
 			if (similarity.rating > .7) {
 				id = await db.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
-					message.channel.send(await LANG(message.guild.id,"LOOKUP_100"));
+					await message.channel.send(await LANG(message.guild.id,"LOOKUP_100"));
 
 				} else {
-					message.channel.send(await LANG(message.guild.id,"LOOKUP_SIMILAR",{
+					await message.channel.send(await LANG(message.guild.id,"LOOKUP_SIMILAR",{
 						QUERY:nickname,
 						NICKNAME:similarity.value,
 						SIMILARITY:similarity.rating * 100
@@ -281,23 +281,22 @@ var commands = {
 				message.channel.send(await LANG(message.guild.id,"LOOKUP_ERROR_INVALID",{COMMAND:"`world.player.playerId`"}))
 			}
 
-			lookUp("https://boxcritters.com/data/player/" + id).then(async (body) => {
-				try {
-					var data = JSON.parse(body);
-				} catch (e) {
-					invalidError();
-					return
-				}
-				if (!await db.get(data.nickname)) {
-					await db.add(id, data.nickname);
-					message.channel.send(await LANG(message.guild.id,"LOOKUP_SAVED",{
-						NICKNAME:data.nickname,
-						ID:id
-					}))
-				}
-				data.critterId = data.critterId || "hamster";
-				message.channel.send(await lookNice(message.guild.id,data));
-			});
+			var body = await lookUp("https://boxcritters.com/data/player/" + id)
+			try {
+				var data = JSON.parse(body);
+			} catch (e) {
+				invalidError();
+				return
+			}
+			if (!await db.get(data.nickname)) {
+				await db.add(id, data.nickname);
+				message.channel.send(await LANG(message.guild.id,"LOOKUP_SAVED",{
+					NICKNAME:data.nickname,
+					ID:id
+				}))
+			}
+			data.critterId = data.critterId || "hamster";
+			message.channel.send(await lookNice(message.guild.id,data));
 		}
 	},
 	"room": {
