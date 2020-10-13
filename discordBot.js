@@ -94,14 +94,6 @@ async function lookNice(guildId,data) {
 			value = value ? "✅" : "❌";
 		}
 		if (!value) return;
-		//key = key.replace("is", "");
-		/*key = key.replace("gear", await LANG(guildId,"USER_CURRENT_GEAR"));
-		key = key.replace("lastSeen", await LANG(guildId,"USER_LAST_SEEN"));
-		key = key.replace("Team", await LANG(guildId,"USER_TEAM"));
-		key = key.replace("Approved", await LANG(guildId,"USER_APPROVED"));
-		key = key.replace("Member", await LANG(guildId,"USER_MEMBER"));
-		key = key.replace("Banned", await LANG(guildId,"USER_BANNED"));
-		key = key.replace("created", await LANG(guildId,"USER_CREATED"));*/
 		key = await LANG(guildId,"FIELD_"+camelToSnakeCase(key).toUpperCase());
 		key = key.charAt(0).toUpperCase() + key.substr(1)
 		embed.addField("**" + key + "**", value, ["boolean", "number"].includes(type))
@@ -283,6 +275,7 @@ var commands = {
 				id = nickname
 
 			}
+			message.channel.startTyping();
 
 			async function invalidError() {
 				message.channel.send(await LANG(message.guild.id,"LOOKUP_ERROR_INVALID",{COMMAND:"`world.player.playerId`"}))
