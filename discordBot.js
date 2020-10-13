@@ -431,7 +431,7 @@ async function parseCommand(message) {
 		return;
 	}
 	await commands[cmd].call(message, parts)
-	message.channel.stopTyping();
+	if(message.channel.typing) message.channel.stopTyping(message.channel.typingCount);
 }
 
 async function logError(message = {},e){
@@ -448,7 +448,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(e=>logError(message,e));
 	}
 });
