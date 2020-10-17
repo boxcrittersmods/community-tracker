@@ -82,6 +82,8 @@ async function getWikiUrl(itemId) {
 
 const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 
+var truncate = (i,l) => i.length > l?i.substring(0, l-3) + '...':i;
+
 async function lookNice(guildId,data) {
 	var embed = new Discord.RichEmbed()
 		.setColor(0x55cc11);
@@ -96,7 +98,8 @@ async function lookNice(guildId,data) {
 		if (!value) return;
 		key = await LANG(guildId,"FIELD_"+camelToSnakeCase(key).toUpperCase());
 		key = key.charAt(0).toUpperCase() + key.substr(1)
-		embed.addField("**" + key + "**", value, ["boolean", "number"].includes(type))
+		console.log(value);
+		embed.addField("**" + key + "**", truncate(value.toString(),1024), ["boolean", "number"].includes(type))
 	}
 
 	if (data.nickname) {
@@ -187,7 +190,7 @@ async function lookNice(guildId,data) {
 				embed.setThumbnail(data[key])
 				break;
 			case "triggers":
-				embed.addField(await LANG(guildId,"FIELD_TRIGGERS"), data[key].map(JSON.stringify).join("\n"));
+				embed.addField(await LANG(guildId,"FIELD_TRIGGERS"),truncate( data[key].map(JSON.stringify).join("\n"),1024));
 			break;
 			case "sprites":
 				embed.setImage(data[key]);
@@ -307,7 +310,7 @@ var commands = {
 				message.channel.send(await LANG(message.guild.id,"ROOM_INVALID",{ROOM:room}));
 				return;
 			}
-			await message.channel.send(await lookNice(message.guild.id,room));
+			message.channel.send(await lookNice(message.guild.id,room));
 			if(room.music) {
 				await message.channel.send({file:room.music})
 			}
@@ -375,6 +378,7 @@ var commands = {
  * @param {String} value 
  */
 function getCloseset(array, value) {
+	array = array.filter(a=>!!a);
 	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
 	return {
