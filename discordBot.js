@@ -208,12 +208,12 @@ async function lookNice(guildId,data) {
 
 async function getItem(itemId) {
 	var items = await itemList.getJson();
-	itemId = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)], itemId).value;
+	itemId = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)].filter(a=>!!a), itemId).value;
 	return items.find(i => i.itemId == itemId || i.name == itemId);
 }
 async function getRoom(roomId) {
 	var rooms = await roomList.getJson()
-	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)], roomId).value
+	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)].filter(a=>!!a), roomId).value
 	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
 
@@ -378,7 +378,6 @@ var commands = {
  * @param {String} value 
  */
 function getCloseset(array, value) {
-	array = array.filter(a=>!!a);
 	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
 	return {
