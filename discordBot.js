@@ -451,7 +451,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(e=>logError(message,e));
 	}
 });
