@@ -144,8 +144,8 @@ async function lookNice(guildId, data) {
 			case "critterId":
 				var title = "**" + await LANG(guildId, "FIELD_CRITTER_ID") + "**";
 				data[key] = data[key]
-					//|| "hamster";
-					|| "penguin";
+					|| "hamster";
+				//|| "penguin";
 				embed.addField(title, getCritterEmoji(data[key]), true);
 				break;
 			case "created":
