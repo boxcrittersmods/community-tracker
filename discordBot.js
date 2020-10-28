@@ -159,8 +159,8 @@ async function lookNice(guildId, data) {
 					DD: zero(date.getDate()),//01-31
 					D: date.getDate(),//1-31
 					MMM: monthNames[date.getMonth()],
-					MM: zero(date.getMonth()),
-					M: date.getMonth(),
+					MM: zero(date.getMonth() + 1),
+					M: date.getMonth() + 1,
 					YYYY: date.getFullYear(),
 					YY: zero(date.getFullYear() - 2000),
 					Y: date.getFullYear() - 2000
