@@ -88,7 +88,7 @@ const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLow
 let truncate = (i, l) => i.length > l ? i.substring(0, l - 3) + '...' : i;
 
 async function lookNice(guildId, data) {
-	let embed = new Discord.RichEmbed()
+	let embed = new Discord.MessageEmbed()
 		.setColor(0x55cc11);
 	let message = { embed, files: [] };
 	async function field(key) {
@@ -130,7 +130,7 @@ async function lookNice(guildId, data) {
 		}
 
 		if (data.background || data.foreground) {
-			embed.attachFile("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png");
+			embed.attachFiles("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png");
 		}
 	}
 
@@ -359,7 +359,7 @@ let commands = {
 			}
 			message.channel.send(await lookNice(message.guild.id, room));
 			if (room.music) {
-				await message.channel.send({ file: room.music });
+				await message.channel.send({ files: [room.music] });
 			}
 		}
 	},
