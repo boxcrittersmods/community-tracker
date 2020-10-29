@@ -20,44 +20,7 @@ async function disconnect(client) {
 	await client.close();
 }
 
-async function addToDB(playerId, nickname) {
-	var client = await connect("playerIds");
-	if (!client) return;
-	var db = client.db();
-	var collection = db.collection("playerIds");
-	collection.insertOne({ nickname, playerId });
-	await disconnect(client);
-
-}
-
-async function getUsenames() {
-	var client = await connect("playerIds");
-	if (!client) return [];
-	var db = client.db();
-	var collection = db.collection("playerIds");
-	var usernames = await collection.distinct("nickname");
-	await disconnect(client);
-	return usernames;
-
-}
-
-
-
-async function getFromDB(nickname) {
-	var client = await connect("playerIds");
-	if (!client) return;
-	var db = client.db();
-	var collection = db.collection("playerIds");
-	var player = await collection.findOne({ nickname });
-	await disconnect(client);
-	if (!player) return;
-	return player.playerId;
-}
-
 module.exports = {
 	connect,
-	disconnect,
-	add: addToDB,
-	get: getFromDB,
-	list: getUsenames
+	disconnect
 };
