@@ -1,28 +1,29 @@
 {
-  "name": "bcmc-community-tracker",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/boxcrittersmods/community-tracker.git"
-  },
-  "author": "tumble1999",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/boxcrittersmods/community-tracker/issues"
-  },
-  "homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
-  "dependencies": {
-    "discord.js": "^11.3.2",
-    "gif-encoder-2": "^1.0.5",
-    "jsdom": "^16.4.0",
-    "mongodb": "^3.6.2",
-    "node-fetch": "^2.6.1",
-    "path": "^0.12.7",
-    "string-similarity": "^4.0.2"
-  }
+	"name": "bcmc-community-tracker",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/boxcrittersmods/community-tracker.git"
+	},
+	"author": "tumble1999",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/boxcrittersmods/community-tracker/issues"
+	},
+	"homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
+	"dependencies": {
+		"discord.js": "^11.3.2",
+		"gif-encoder-2": "^1.0.5",
+		"jsdom": "^16.4.0",
+		"lodash": "^4.17.20",
+		"lodash.isequal": "^4.5.0",
+		"mongodb": "^3.6.2",
+		"node-fetch": "^2.6.1",
+		"path": "^0.12.7",
+		"string-similarity": "^4.0.2"
+	}
 }

@@ -1,10 +1,10 @@
 const Discord = require("discord.js");
 const Website = require("./website");
-var stringSimilarity = require('string-similarity');
+let stringSimilarity = require('string-similarity');
 const { LANG, LANGLIST } = require('./languages.js');
 
-var db = require("./db");
-var settings = require("./settings");
+let db = require("./db");
+let settings = require("./settings");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
 String.prototype.replaceAll = function (a, b) {
@@ -13,6 +13,7 @@ String.prototype.replaceAll = function (a, b) {
 
 const wikiPages = require("./wikiPages.json");
 const languages = require("./languages.js");
+const Watcher = require("./watcher");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
@@ -25,8 +26,8 @@ client.on('ready', () => {
 
 
 async function getItemName(itemId) {
-	var items = await itemList.getJson();
-	var item = items.find(i => i.itemId == itemId || i.name == itemId);
+	let items = await itemList.getJson();
+	let item = items.find(i => i.itemId == itemId || i.name == itemId);
 	if (!item) return;
 	return item.name;
 }
@@ -35,18 +36,18 @@ function getCritterEmoji(critterID) {
 	if (critterID == "snail") {
 		return "<:rsnail:701095041426391091>";
 	}
-	var boxCutters = client.guilds.get("570411578139344926");
+	let boxCutters = client.guilds.get("570411578139344926");
 	if (!boxCutters) return critterID;
 	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
 }
 
 async function timeSince(guildId, date) {
 
-	var seconds = Math.floor((new Date() - date) / 1000);
+	let seconds = Math.floor((new Date() - date) / 1000);
 
-	var interval = seconds / 31536000;
+	let interval = seconds / 31536000;
 
-	var output = {};
+	let output = {};
 
 	if (interval > 1) {
 		output.YEARS_VALUE = Math.floor(interval);
@@ -75,59 +76,60 @@ async function timeSince(guildId, date) {
 }
 
 async function getWikiUrl(itemId) {
-	var itemName = wikiPages[itemId] || await getItemName(itemId);
+	let itemName = wikiPages[itemId] || await getItemName(itemId);
 	if (!itemName) return;
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
 const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 
-var truncate = (i, l) => i.length > l ? i.substring(0, l - 3) + '...' : i;
+let truncate = (i, l) => i.length > l ? i.substring(0, l - 3) + '...' : i;
 
 async function lookNice(guildId, data) {
-	var embed = new Discord.RichEmbed()
+	let embed = new Discord.RichEmbed()
 		.setColor(0x55cc11);
-	var message = { embed, files: [] };
+	let message = { embed, files: [] };
 	async function field(key) {
-		var value = data[key];
-		var type = typeof (value);
-		var boolean = type == "boolean";
+		let value = data[key];
+		let type = typeof (value);
+		let boolean = type == "boolean";
 		if (boolean) {
 			value = value ? "✅" : "❌";
 		}
 		if (!value) return;
 		key = await LANG(guildId, "FIELD_" + camelToSnakeCase(key).toUpperCase());
 		key = key.charAt(0).toUpperCase() + key.substr(1);
-		console.log(value);
-		embed.addField("**" + key + "**", truncate(value.toString(), 1024), ["boolean", "number"].includes(type));
+		if (value) embed.addField("**" + key + "**", truncate(value.toString(), 1024), ["boolean", "number"].includes(type));
 	}
 
-	if (data.nickname) {
-		var mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"];
-		if (!data.isApproved) {
-			data.nickname = await LANG(guildId, "USER_HIDDEN_NICKNAME");
+	if (!Array.isArray(data)) {
+		if (data.nickname) {
+			let mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"];
+			if (!data.isApproved) {
+				data.nickname = await LANG(guildId, "USER_HIDDEN_NICKNAME");
+			}
+			if (mascots.includes(data.nickname)) {
+				data.nickname = await LANG(guildId, "USER_LABEL_MASCOT") + `: ${data.nickname}`;
+			} else {
+				data.nickname = await LANG(guildId, "USER_LABEL_PLAYER") + `: ${data.nickname}`;
+			}
+
+			data.isApproved = data.isApproved || false;
+			data.gear = data.gear || [];
 		}
-		if (mascots.includes(data.nickname)) {
-			data.nickname = await LANG(guildId, "USER_LABEL_MASCOT") + `: ${data.nickname}`;
-		} else {
-			data.nickname = await LANG(guildId, "USER_LABEL_PLAYER") + `: ${data.nickname}`;
+		if (data.itemId) {
+			data.name = await LANG(guildId, "ITEM_NAME_" + data.itemId.toUpperCase());
+			if (data.slot) data.slot = await LANG(guildId, "ITEM_SLOT_" + data.slot.toUpperCase());
+			if (data.theme) data.theme = await LANG(guildId, "ITEM_THEME_" + data.theme.toUpperCase());
 		}
 
-		data.isApproved = data.isApproved || false;
-		data.gear = data.gear || [];
-	}
-	if (data.itemId) {
-		data.name = await LANG(guildId, "ITEM_NAME_" + data.itemId.toUpperCase());
-		if (data.slot) data.slot = await LANG(guildId, "ITEM_SLOT_" + data.slot.toUpperCase());
-		if (data.theme) data.theme = await LANG(guildId, "ITEM_THEME_" + data.theme.toUpperCase());
-	}
+		if (data.roomId) {
+			data.name = await LANG(guildId, "ROOM_NAME_" + data.roomId.toUpperCase());
+		}
 
-	if (data.roomId) {
-		data.name = await LANG(guildId, "ROOM_NAME_" + data.roomId.toUpperCase());
-	}
-
-	if (data.background || data.foreground) {
-		embed.attachFile("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png");
+		if (data.background || data.foreground) {
+			embed.attachFile("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png");
+		}
 	}
 
 	for (const key in data) {
@@ -142,7 +144,7 @@ async function lookNice(guildId, data) {
 				}
 				break;
 			case "critterId":
-				var title = "**" + await LANG(guildId, "FIELD_CRITTER_ID") + "**";
+				let title = "**" + await LANG(guildId, "FIELD_CRITTER_ID") + "**";
 				data[key] = data[key]
 					|| "hamster";
 				//|| "penguin";
@@ -152,9 +154,9 @@ async function lookNice(guildId, data) {
 			case "lastSeen":
 				const monthNames = await Promise.all(new Array(26).fill("").map(async (_, n) => (await LANG(guildId, "TIME_MONTH_" + n))));
 				const dayNames = await Promise.all(new Array(6).fill("").map(async (_, n) => (await LANG(guildId, "TIME_DAY_" + n))));
-				var zero = (n) => n < 10 ? "0" + n : n;
-				var date = new Date(data[key]);
-				var dateString = await LANG(guildId, "TIME_DATESTRING", {
+				let zero = (n) => n < 10 ? "0" + n : n;
+				let date = new Date(data[key]);
+				let dateString = await LANG(guildId, "TIME_DATESTRING", {
 					DDD: dayNames[date.getDay()],
 					DD: zero(date.getDate()),//01-31
 					D: date.getDate(),//1-31
@@ -165,7 +167,7 @@ async function lookNice(guildId, data) {
 					YY: zero(date.getFullYear() - 2000),
 					Y: date.getFullYear() - 2000
 				});
-				var time = await timeSince(guildId, date);
+				let time = await timeSince(guildId, date);
 				data[key] = (key == "lastSeen" ? (time == await LANG(guildId, "TIME_TODAY") ? "🟢 " : "🔴 ") : "") + await LANG(guildId, "TIME_LABEL_" + camelToSnakeCase(key).toUpperCase()) + " " +
 					`${time} (${dateString})`;
 				await field(key);
@@ -175,15 +177,15 @@ async function lookNice(guildId, data) {
 				embed.attachFiles([{ name: "player.png", attachment: "https://api.boxcrittersmods.ga/player/" + data.playerId + ".png" }]).setImage("attachment://player.png");
 
 				//Gear List
-				var gearList = await Promise.all(data[key].map(async i => {
-					var wikiUrl = await getWikiUrl(i);
+				let gearList = await Promise.all(data[key].map(async i => {
+					let wikiUrl = await getWikiUrl(i);
 					return wikiUrl ? `[${i}](${wikiUrl})` : i;
 				}));
 				data[key] = gearList.join("\n");
 				await field(key);
 				break;
 			case "spriteSheet":
-				var sprites = await (Website.Connect(data[key])).getJson();;
+				let sprites = await (Website.Connect(data[key])).getJson();;
 				embed.addField(await LANG(guildId, "FIELD_SPRITE_SHEET"), sprites.images.join("\n"));
 				embed.addField(await LANG(guildId, "FIELD_SPRITES"), data[key]);
 				embed.addField(await LANG(guildId, "FIELD_ANIMATION"), "https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif");
@@ -205,16 +207,17 @@ async function lookNice(guildId, data) {
 				break;
 		}
 	}
+	embed.footer = "BCMC";
 	return message;
 }
 
 async function getItem(itemId) {
-	var items = await itemList.getJson();
+	let items = await itemList.getJson();
 	itemId = getCloseset([...items.map(i => i.itemId), ...items.map(i => i.name)].filter(a => !!a), itemId).value;
 	return items.find(i => i.itemId == itemId || i.name == itemId);
 }
 async function getRoom(roomId) {
-	var rooms = await roomList.getJson();
+	let rooms = await roomList.getJson();
 	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)].filter(a => !!a), roomId).value;
 	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
@@ -223,11 +226,12 @@ function lookUp(url) {
 	return Website.Connect(url).getText();
 }
 
-Array.prototype.mapAsync = function (func, context) {
-	return Promise.all(this.map(func, context));
-};
 
-var commands = {
+function mapAsync(array, func, context) {
+	return Promise.all(this.map(func, context));
+}
+
+let commands = {
 	"ping": {
 		args: [], call: async function (message, args) {
 			message.channel.send(await LANG(message.guild.id, "PING_RESPONSE"));
@@ -245,25 +249,25 @@ var commands = {
 	},
 	"help": {
 		args: [], call: async function (message, args) {
-			var list = await Object.keys(commands).mapAsync(async c => {
-				var description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
-				var args = await commands[c].args.mapAsync(async a => {
+			let list = await mapAsync(Object.keys(commands), async c => {
+				let description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
+				let args = await mapAsync(commands[c].args, async a => {
 					a = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_ARG_" + a.toUpperCase());
 					return !a.includes("(") ? "[" + a + "]" : a;
 				});
 				return "!bc " + c + (args.length > 0 ? " " : "") + args.join(" ") + " - " + description;
 			});
-			var header = await LANG(message.guild.id, "HELP_HEADER");
-			var footer = await LANG(message.guild.id, "HELP_FOOTER", { LINK: "https://discord.gg/D2ZpRUW" });
+			let header = await LANG(message.guild.id, "HELP_HEADER");
+			let footer = await LANG(message.guild.id, "HELP_FOOTER", { LINK: "https://discord.gg/D2ZpRUW" });
 			message.channel.send(header + "\n```" + list.join("\n") + "```\n" + footer);
 		}
 	},
 	"lookup": {
 		args: ["playerid"], call: async function (message, args) {
-			var nickname = args.join(" ");
-			var playerNicknames = await db.list();
-			var similarity = getCloseset(playerNicknames, nickname);
-			var id;
+			let nickname = args.join(" ");
+			let playerNicknames = await db.list();
+			let similarity = getCloseset(playerNicknames, nickname);
+			let id;
 			if (similarity.rating > .7) {
 				id = await db.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
@@ -286,9 +290,9 @@ var commands = {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
 
-			var body = await lookUp("https://boxcritters.com/data/player/" + id);
+			let body = await lookUp("https://boxcritters.com/data/player/" + id);
 			try {
-				var data = JSON.parse(body);
+				let data = JSON.parse(body);
 			} catch (e) {
 				invalidError();
 				return;
@@ -306,8 +310,8 @@ var commands = {
 	},
 	"room": {
 		args: ["roomid"], call: async function name(message, args) {
-			var roomId = args.join(" ");
-			var room = await getRoom(roomId);
+			let roomId = args.join(" ");
+			let room = await getRoom(roomId);
 			if (!room) {
 				message.channel.send(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
@@ -320,8 +324,8 @@ var commands = {
 	},
 	"item": {
 		args: ["itemid"], call: async function name(message, args) {
-			var itemId = args.join(" ");
-			var item = await getItem(itemId);
+			let itemId = args.join(" ");
+			let item = await getItem(itemId);
 			if (!item) {
 				message.channel.send(await LANG(message.guild.id, "ITEM_INVALID", { ITEM: item }));
 				return;
@@ -332,11 +336,11 @@ var commands = {
 	"settings": {
 		args: ["action", "key", "value"],
 		call: async function (message, args) {
-			var serverId = message.guild.id;
-			var serverName = message.guild.name;
-			var currentSettings = await settings.get(serverId);
-			var key = args.shift();
-			var value = args.shift();
+			let serverId = message.guild.id;
+			let serverName = message.guild.name;
+			let currentSettings = await settings.get(serverId);
+			let key = args.shift();
+			let value = args.shift();
 
 			if (key == "reset") {
 				await settings.reset(serverId);
@@ -355,7 +359,7 @@ var commands = {
 			}
 
 
-			var embed = new Discord.RichEmbed();
+			let embed = new Discord.RichEmbed();
 			embed.setTitle(await LANG(message.guild.id, "SETTINGS_HEADER", { SERVER: serverName }));
 			if (Object.keys(currentSettings).length == 0) embed.setDescription(await LANG(message.guild.id, "SETTINGS_NONE"));
 			for (const k in currentSettings) {
@@ -368,8 +372,51 @@ var commands = {
 	"languages": {
 		args: [],
 		call: async function (message, args) {
-			var list = await LANGLIST();
+			let list = await LANGLIST();
 			message.channel.send("`" + list.join("`, `") + "`");
+		}
+	},
+	"watch": {
+		args: ["url", "(interval)", "(showMissed)"],
+		call: async function (message, args) {
+			let url = args[0];
+			let interval = args[1];
+			let first = args[2];
+			let channel = message.channel;
+			var isEqual = undefined;
+
+
+			switch (url) {
+				case "room":
+				case "rooms":
+					url = "https://boxcritters.herokuapp.com/base/rooms.json";
+					isEqual = (a, b) => {
+						return a.roomId == b.roomId;
+					};
+				default:
+					if (!url.startsWith("http")) {
+						message.channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID"));
+					}
+
+					message.channel.send(`Watching ${url} in ${channel}`);
+					let website = Website.Connect(url);
+
+					let watcher = new Watcher(async () => {
+						return await website.getJson();
+
+					}, isEqual, interval, first);
+
+					watcher.onChange(async (last, now, diff) => {
+						var send = async (data) => channel.send(typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
+						//channel.send("i would send " + diff.map(i => i.roomId).join(", "));
+						console.log("Differences", diff);
+						if (Array.isArray(diff)) {
+							diff.forEach(send);
+						} else {
+							await send(dif);
+						}
+					});
+			}
 		}
 	}
 };
@@ -380,7 +427,7 @@ var commands = {
  * @param {String} value 
  */
 function getCloseset(array, value) {
-	var similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
+	let similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
 	console.log("Similarities of " + value, similarity.ratings);
 	return {
 		value: array[similarity.bestMatchIndex],
@@ -392,15 +439,15 @@ function getCloseset(array, value) {
 
 async function parseCommand(message) {
 	message.channel.startTyping();
-	var parts = message.content.split(" ");
+	let parts = message.content.split(" ");
 	parts.shift();
-	var commandIds = Object.keys(commands);
-	var cmd = parts.shift();
-	var similarity = getCloseset(commandIds, cmd);
+	let commandIds = Object.keys(commands);
+	let cmd = parts.shift();
+	let similarity = getCloseset(commandIds, cmd);
 	cmd = similarity.value;
 
-	var currentSettings = await settings.get(message.guild.id);
-	var channelQuery = currentSettings[cmd + "Channel"];
+	let currentSettings = await settings.get(message.guild.id);
+	let channelQuery = currentSettings[cmd + "Channel"];
 	if (channelQuery) {
 		let chId = channelQuery.replace(/\D/g, '');
 		if (message.channel.id != chId) {
@@ -408,14 +455,14 @@ async function parseCommand(message) {
 				.setTitle(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TITLE"))
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TEXT", { CHANNEL: channelQuery }));
-			var msg = await message.channel.send({ embed });
+			let msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
 			return;
 		}
 	}
-	var roleQuery = currentSettings[cmd + "Permissions"];
+	let roleQuery = currentSettings[cmd + "Permissions"];
 	if (roleQuery) {
 		let rlId = roleQuery.replace(/\D/g, '');
 		if (!message.member.roles.has(rlId)) {
@@ -423,7 +470,7 @@ async function parseCommand(message) {
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_ROLE_WRONG_TEXT", { ROLE: roleQuery }));
-			var msg = await message.channel.send({ embed });
+			let msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
@@ -453,7 +500,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });
