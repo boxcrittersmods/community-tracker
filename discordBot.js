@@ -334,19 +334,18 @@ let commands = {
 			let body = await lookUp("https://boxcritters.com/data/player/" + id);
 			try {
 				let data = JSON.parse(body);
+				if (!await db.get(data.nickname)) {
+					await db.add(id, data.nickname);
+					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
+						NICKNAME: data.nickname,
+						ID: id
+					}));
+				}
+				data.critterId = data.critterId || "hamster";
+				message.channel.send(await lookNice(message.guild.id, data));
 			} catch (e) {
 				invalidError();
-				return;
 			}
-			if (!await db.get(data.nickname)) {
-				await db.add(id, data.nickname);
-				message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
-					NICKNAME: data.nickname,
-					ID: id
-				}));
-			}
-			data.critterId = data.critterId || "hamster";
-			message.channel.send(await lookNice(message.guild.id, data));
 		}
 	},
 	"room": {
