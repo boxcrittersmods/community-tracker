@@ -6,10 +6,11 @@ const uri = `mongodb+srv://${dbUser}:${dbPassword}@playerdictionary.mftw9.mongod
 async function connect(dbName) {
 	let client = new MongoClient(uri.replace("COLLECTION", dbName), { useUnifiedTopology: true });
 	try {
+		console.log("Connected to database");
 		await client.connect({ useUnifiedTopology: true });
 
 	} catch (error) {
-		console.log("unable to connect to db");
+		console.log("unable to connect to database");
 		return;
 
 	}
@@ -17,6 +18,7 @@ async function connect(dbName) {
 }
 
 async function disconnect(client) {
+	console.log("Disconnected from database");
 	await client.close();
 }
 

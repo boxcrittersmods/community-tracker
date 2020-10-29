@@ -42,7 +42,7 @@ class Watcher {
 		this.change = cb;
 	}
 
-	async start(interval = 5000, first) {
+	async start(interval = 120e3, first) {
 		let last, now;
 		var update = async () => {
 			now = await this.query();

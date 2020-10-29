@@ -32,9 +32,10 @@ async function set(serverId, value = {}) {
 	let client = await connect("settings");
 	if (!client) return;
 
-	let id = SETTINGS.findIndex(s => s.serverId == serverId) || SETTINGS.length,
-		db = client.db(),
+	let id = SETTINGS.findIndex(s => s.serverId == serverId);
+	db = client.db(),
 		collection = db.collection("settings");
+	if (id == -1) id = SETTINGS.length;
 	if (!await collection.findOne({ serverId })) {
 		await collection.insertOne(value);
 		SETTINGS.push(value);

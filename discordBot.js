@@ -3,7 +3,7 @@ const Website = require("./website");
 let stringSimilarity = require('string-similarity');
 const { LANG, LANGLIST } = require('./languages.js');
 
-let db = require("./db");
+let db = require("./playerDictionary");
 let settings = require("./settings");
 //const CritterAPI = require("./critterapi/critterapi.js")
 
@@ -233,12 +233,49 @@ function mapAsync(array, func, context) {
 	return Promise.all(array.map(func, context));
 }
 
-async function watch(guild, { channel, url, interval, first }) {
+async function watch(guild, { channel, url, first, mention }) {
 	if (typeof guild == "string") guild = client.guilds.cache.get(guild);
 	if (typeof channel == "string") channel = guild.channels.cache.get(channel);
-	let isEqual = undefined;
+	let isEqual = undefined, watcher;
 
 	switch (url) {
+		case "item":
+		case "items":
+			let itemCodesJson = Website.Connect("https://api.boxcrittersmods.ga/itemcodes"),
+				shopsJson = Website.Connect("https://boxcritters.herokuapp.com/base/shops.json");
+			watcher = new Watcher(async () => {
+				let codes = await itemCodesJson.getJson(),
+					shops = await shopsJson.getJson(),
+					shop = shops.sort((a, b) => a.startDate - b.startDate)[0];
+
+				let shopItems = shop.collection.map(itemId => ({
+					name: itemId,
+					dateReleased: shop.startDate,
+					code: "Available in the shop"
+				}));
+				codes = codes.concat(shopItems).sort((a, b) => new Date(b.dateReleased) - new Date(a.dateReleased)).filter(i => !i.dateExpired);
+
+				return codes;
+			}, (a, b) => a.name == b.name, null, first);
+			watcher.onChange(async (last, now, diff) => {
+				let items = await Promise.all(diff.map(
+					async code => {
+						let item = await getItem(code.name);
+						return {
+							itemId: item.itemId,
+							name: item.name,
+							icon: item.icon,
+							sprites: item.sprites,
+							dateReleased: code.dateReleased,
+							notes: code.notes,
+							code: "`" + code.code + "`"
+						};
+					}
+				));
+				items.forEach(async data => await channel.send(mention || "", await lookNice(guild, data)));
+				console.log("Items", items);
+			});
+			break;
 		case "room":
 		case "rooms":
 			url = "https://boxcritters.herokuapp.com/base/rooms.json";
@@ -247,21 +284,18 @@ async function watch(guild, { channel, url, interval, first }) {
 			};
 		default:
 			if (!url.startsWith("http")) {
-				channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID")).then(m => m.delete(3000));
+				channel.send(await LANG(channel.guild.id, "WATCH_URL_INVALID"));
 				return;
 			}
 
-			channel.send(`Watching ${url} in ${channel}`);
 			let website = Website.Connect(url);
-
-			let watcher = new Watcher(async () => {
+			watcher = new Watcher(async () => {
 				return await website.getJson();
 
 			}, isEqual, interval, first);
 
 			watcher.onChange(async (last, now, diff) => {
-				var send = async (data) => channel.send(typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
-				//channel.send("i would send " + diff.map(i => i.roomId).join(", "));
+				let send = async (data) => channel.send(mention || "", typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
 				console.log("Differences", diff);
 				if (Array.isArray(diff)) {
 					diff.forEach(send);
@@ -270,6 +304,8 @@ async function watch(guild, { channel, url, interval, first }) {
 				}
 			});
 	}
+	channel.send(`Watching ${url} in ${channel}`).then(m => setTimeout(() => m.delete(), 5000)).catch(console.error);
+	channel.watcher = watcher;
 }
 
 let commands = {
@@ -417,26 +453,45 @@ let commands = {
 		}
 	},
 	"watch": {
-		args: ["url", "(interval)", "(showMissed)"],
+		args: ["url", "(mention)", "(showMissed)"],
 		call: async (message, args) => {
 			let url = args[0],
-				interval = args[1] || 5000,
+				mention = args[1] || "",
 				first = args[2],
 				currentSettings = await settings.get(message.guild.id);
 			if (typeof currentSettings.watchers == "undefined") currentSettings.watchers = [];
-			currentSettings.watchers.push({
-				url,
-				interval,
-				channel: message.channel.id
-			});
-			await settings.set(message.guild.id, currentSettings);
+			let id = currentSettings.watchers.findIndex(w => w.channel == message.channel.id);
+			if (!url) {
+				if (id == -1) {
+					message.channel.send("This channel does not have a watcher.");
+				} else {
+					message.channel.send(await lookNice(message.guild.id, currentSettings.watchers[id]));
+				}
+				return;
+			}
+			if (id == -1) id = currentSettings.watchers.length;
+			if (url == "clear") {
+				delete currentSettings.watchers[id];
+				message.channel.send(`Watcher for ${message.channel} has been cleared!`);
+				if (message.channel.watcher) {
+					message.channel.watcher.stop();
+					delete message.channel.watcher;
+				}
+			} else {
+				currentSettings.watchers[id] = {
+					url,
+					mention,
+					channel: message.channel.id
+				};
 
-			watch(message.guild, {
-				channel: message.channel,
-				url,
-				interval,
-				first
-			});
+				watch(message.guild, {
+					channel: message.channel,
+					url,
+					first,
+					mention
+				});
+			}
+			await settings.set(message.guild.id, currentSettings);
 
 		}
 	}
@@ -521,7 +576,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });
