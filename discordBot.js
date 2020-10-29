@@ -399,7 +399,7 @@ let commands = {
 			}
 
 
-			let embed = new Discord.RichEmbed();
+			let embed = new Discord.MessageEmbed();
 			embed.setTitle(await LANG(message.guild.id, "SETTINGS_HEADER", { SERVER: serverName }));
 			if (Object.keys(currentSettings).length == 0) embed.setDescription(await LANG(message.guild.id, "SETTINGS_NONE"));
 			for (const k in currentSettings) {
@@ -472,7 +472,7 @@ async function parseCommand(message) {
 	if (channelQuery) {
 		let chId = channelQuery.replace(/\D/g, '');
 		if (message.channel.id != chId) {
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 				.setTitle(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TITLE"))
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TEXT", { CHANNEL: channelQuery }));
@@ -487,7 +487,7 @@ async function parseCommand(message) {
 	if (roleQuery) {
 		let rlId = roleQuery.replace(/\D/g, '');
 		if (!message.member.roles.cache.has(rlId)) {
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_ROLE_WRONG_TEXT", { ROLE: roleQuery }));
