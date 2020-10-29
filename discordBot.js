@@ -17,36 +17,32 @@ const Watcher = require("./watcher");
 const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
 const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
 
-const client = new Discord.Client();
+const client = new Discord.Client;
 
-client.on('ready', () => {
-	client.user.setPresence({ game: { name: 'Box Critters', type: "PLAYING", }, status: 'online' });
+client.on("ready", async () => {
+	client.user.setPresence({ game: { name: "Box Critters", type: "PLAYING" }, status: "online" });
 	console.log(`Logged in as ${client.user.tag}!`);
+
+	client.guilds.cache.forEach(async guild => {
+		let guildSettings = await settings.get(guild.id);
+		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [], watcher => watch(guild, watcher));
+	});
 });
 
-
 async function getItemName(itemId) {
-	let items = await itemList.getJson();
-	let item = items.find(i => i.itemId == itemId || i.name == itemId);
-	if (!item) return;
-	return item.name;
+	let item = (await itemList.getJson()).find(t => t.itemId == itemId || t.name == itemId);
+	if (item) return item.name;
 }
 
-function getCritterEmoji(critterID) {
-	if (critterID == "snail") {
-		return "<:rsnail:701095041426391091>";
-	}
-	let boxCutters = client.guilds.get("570411578139344926");
-	if (!boxCutters) return critterID;
-	return boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterID.toLowerCase());
+function getCritterEmoji(critterId) {
+	if ("snail" == critterId) return "<:rsnail:701095041426391091>";
+	let boxCutters = client.guilds.cache.get("570411578139344926");
+	return boxCutters ? boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterId.toLowerCase()) : critterId;
 }
 
 async function timeSince(guildId, date) {
-
 	let seconds = Math.floor((new Date() - date) / 1000);
-
 	let interval = seconds / 31536000;
-
 	let output = {};
 
 	if (interval > 1) {
@@ -75,10 +71,16 @@ async function timeSince(guildId, date) {
 	}
 }
 
+
 async function getWikiUrl(itemId) {
 	let itemName = wikiPages[itemId] || await getItemName(itemId);
 	if (!itemName) return;
 	return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
+}
+
+async function getWikiUrl(itemId) {
+	let itemName = wikiPages[itemId] || await getItemName(itemId);
+	if (itemName) return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
 }
 
 const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -228,7 +230,46 @@ function lookUp(url) {
 
 
 function mapAsync(array, func, context) {
-	return Promise.all(this.map(func, context));
+	return Promise.all(array.map(func, context));
+}
+
+async function watch(guild, { channel, url, interval, first }) {
+	if (typeof guild == "string") guild = client.guilds.cache.get(guild);
+	if (typeof channel == "string") channel = guild.channels.cache.get(channel);
+	let isEqual = undefined;
+
+	switch (url) {
+		case "room":
+		case "rooms":
+			url = "https://boxcritters.herokuapp.com/base/rooms.json";
+			isEqual = (a, b) => {
+				return a.roomId == b.roomId;
+			};
+		default:
+			if (!url.startsWith("http")) {
+				channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID"));
+				return;
+			}
+
+			channel.send(`Watching ${url} in ${channel}`);
+			let website = Website.Connect(url);
+
+			let watcher = new Watcher(async () => {
+				return await website.getJson();
+
+			}, isEqual, interval, first);
+
+			watcher.onChange(async (last, now, diff) => {
+				var send = async (data) => channel.send(typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
+				//channel.send("i would send " + diff.map(i => i.roomId).join(", "));
+				console.log("Differences", diff);
+				if (Array.isArray(diff)) {
+					diff.forEach(send);
+				} else {
+					await send(dif);
+				}
+			});
+	}
 }
 
 let commands = {
@@ -378,45 +419,26 @@ let commands = {
 	},
 	"watch": {
 		args: ["url", "(interval)", "(showMissed)"],
-		call: async function (message, args) {
-			let url = args[0];
-			let interval = args[1];
-			let first = args[2];
-			let channel = message.channel;
-			var isEqual = undefined;
+		call: async (message, args) => {
+			let url = args[0],
+				interval = args[1] || 5000,
+				first = args[2],
+				currentSettings = await settings.get(message.guild.id);
+			if (typeof currentSettings.watchers == "undefined") currentSettings.watchers = [];
+			currentSettings.watchers.push({
+				url,
+				interval,
+				channel: message.channel.id
+			});
+			await settings.set(message.guild.id, currentSettings);
 
+			watch(message.guild, {
+				channel: message.channel,
+				url,
+				interval,
+				first
+			});
 
-			switch (url) {
-				case "room":
-				case "rooms":
-					url = "https://boxcritters.herokuapp.com/base/rooms.json";
-					isEqual = (a, b) => {
-						return a.roomId == b.roomId;
-					};
-				default:
-					if (!url.startsWith("http")) {
-						message.channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID"));
-					}
-
-					message.channel.send(`Watching ${url} in ${channel}`);
-					let website = Website.Connect(url);
-
-					let watcher = new Watcher(async () => {
-						return await website.getJson();
-
-					}, isEqual, interval, first);
-
-					watcher.onChange(async (last, now, diff) => {
-						var send = async (data) => channel.send(typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
-						//channel.send("i would send " + diff.map(i => i.roomId).join(", "));
-						console.log("Differences", diff);
-						if (Array.isArray(diff)) {
-							diff.forEach(send);
-						} else {
-							await send(dif);
-						}
-					});
-			}
 		}
 	}
 };

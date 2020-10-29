@@ -3,7 +3,7 @@ const { connect, disconnect } = require("./db");
 
 async function reset(serverId) {
 	if (!serverId) return;
-	var client = await connect();
+	var client = await connect("settings");
 	if (!client) return;
 	var db = client.db();
 	var collection = db.collection("settings");
@@ -13,7 +13,7 @@ async function reset(serverId) {
 
 async function get(serverId) {
 	if (!serverId) return {};
-	var client = await connect();
+	var client = await connect("settings");
 	if (!client) return {};
 	var db = client.db();
 	var collection = db.collection("settings");
@@ -25,7 +25,7 @@ async function get(serverId) {
 async function set(serverId, value = {}) {
 	if (!serverId) return;
 	value.serverId = serverId;
-	var client = await connect();
+	var client = await connect("settings");
 	if (!client) return;
 	var db = client.db();
 	var collection = db.collection("settings");
@@ -34,6 +34,7 @@ async function set(serverId, value = {}) {
 	} else {
 		await collection.replaceOne({ serverId }, value);
 	}
+	console.log("saving", value);
 	await disconnect(client);
 
 }
