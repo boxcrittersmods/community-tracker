@@ -247,7 +247,7 @@ async function watch(guild, { channel, url, interval, first }) {
 			};
 		default:
 			if (!url.startsWith("http")) {
-				channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID"));
+				channel.send(await LANG(message.channel.guild.id, "WATCH_URL_INVALID")).then(m => m.delete(3000));
 				return;
 			}
 
