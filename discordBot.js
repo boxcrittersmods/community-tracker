@@ -486,7 +486,7 @@ async function parseCommand(message) {
 	let roleQuery = currentSettings[cmd + "Permissions"];
 	if (roleQuery) {
 		let rlId = roleQuery.replace(/\D/g, '');
-		if (!message.member.roles.has(rlId)) {
+		if (!message.member.roles.cache.has(rlId)) {
 			let embed = new Discord.RichEmbed()
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
