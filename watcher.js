@@ -20,7 +20,7 @@ const _ = require('lodash'),
 		createWatcher("items", {
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
-					shop = (await (await lists.shops()).getJson()).sort((e, t) => e.startDate - t.startDate),
+					shop = (await (await lists.shops()).getJson()).sort((a, b) => a.startDate - b.startDate),
 					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" }));
 				return codes.concat(shopItems).sort((e, t) => new Date(t.dateReleased) - new Date(e.dateReleased));
 			},

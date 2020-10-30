@@ -2,13 +2,14 @@ const Website = require("./website"),
 
 
 	listFunc = type => async () => {
-		for (var m of (await lists.manifests.getJson()).manifest) if (m.id == type) {
+		for (var m of (await lists.manifests.getJson())) if (m.id == type) {
 			lists[m.id] = async () => Website.Connect(m.src);
 			return await lists[m.id]();
 		}
 	},
 	lists = {
-		manifests: Website.Connect("https://boxcritters.com/play/manifest.json"),
+		//manifests: Website.Connect("https://boxcritters.com/play/manifest.json"),
+		manifests: Website.Connect("https://api.boxcrittersmods.ga/manifests"),
 		items: listFunc("items"),
 		rooms: listFunc("rooms"),
 		shops: listFunc("shops"),
