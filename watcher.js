@@ -1,7 +1,69 @@
 "strict mode";
 
-const { find } = require('lodash');
-const _ = require('lodash');
+const _ = require('lodash'),
+	{ lists, itemCodeList, getItem } = require("./manifests"),
+	{ lookNice } = require("./discordUtils"),
+	{ LANG_TIME } = require('./languages.js'),
+	interval = 120e3,
+	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild.id, data) : data),
+	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
+	createWatcher = (id, {
+		query = async () => await Website.Connect(url).getJson(),
+		equality = _.isEqual,
+		createMessage = async (diff, last, now) => diff
+	}) => ({ id, query, equality, createMessage, channels: [] }),
+	watchers = [
+		createWatcher("rooms", {
+			query: async () => await (await lists.rooms()).getJson(),
+			equality: (a, b) => a.roomId == b.roomId,
+		}),
+		createWatcher("items", {
+			query: async () => {
+				let codes = await itemCodeList.getJson(),
+					shop = (await (await lists.shops()).getJson()).sort((e, t) => e.startDate - t.startDate),
+					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" }));
+				return codes.concat(shopItems).sort((e, t) => new Date(t.dateReleased) - new Date(e.dateReleased));
+			},
+			equality: (a, b) => a.name == b.name,
+			createMessage: async (diff, last, now) =>
+				await Promise.all(diff.map(
+					async code => {
+						let item = await getItem(code.name);
+						return {
+							itemId: item.itemId,
+							name: item.name,
+							icon: item.icon,
+							sprites: item.sprites,
+							dateReleased: code.dateReleased,
+							notes: code.notes,
+							code: "`" + code.code + "`"
+						};
+					}
+				))
+		})
+	];
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+async function createMessage(watcher) {
+	let now = await watcher.query(),
+		last = watcher.last;
+	null == last && (last = new now.constructor);
+	let diff = _.filter(now, e => !_.find(last, n => watcher.equality(e, n))),
+		data = await watcher.createMessage(diff, last, now);
+	watcher.last = now;
+	return data;
+}
+
+async function tick() {
+	for (let watcher of watchers) {
+		if (0 == watcher.channels.length) continue;
+		let data = await createMessage(watcher);
+		for (let channel of watcher.channels) send(channel, data);
+		await sleep(interval);
+	}
+	setTimeout(tick, interval);
+}
+setTimeout(tick, interval);
 
 function diffStr(str1, str2) {
 	let diff = "";
@@ -12,78 +74,58 @@ function diffStr(str1, str2) {
 	return diff;
 }
 
-function diffArr(a1, a2) {
-	let a = [], diff = [];
-	for (let i = 0; i < a1.length; i++) {
-		a[a1[i]] = true;
+async function watch(discordChannel, url, mention, first,) {
+	let watcher = watchers.find(w => w.id == url);
+	if (typeof watcher == "undefined") {
+		watcher = createWatcher(url);
+		watchers.push(watchers);
 	}
-	for (let i = 0; i < a2.length; i++) {
-		if (a[a2[i]]) {
-			delete a[a2[i]];
-		} else {
-			a[a2[i]] = true;
-		}
-	}
-	for (let k in a) {
-		diff.push(k);
-	}
-	return diff;
-}
-
-
-class Watcher {
-	constructor(query, equal, interval, first) {
-		this.query = query;
-		this.equal = equal || _.isEqual;
-		this.start(interval, first);
-	}
-
-	onChange(cb) {
-		this.change = cb;
-	}
-
-	async start(interval = 120e3, first) {
-		let last, now;
-		var update = async () => {
-			now = await this.query();
-			if (typeof last == "undefined") last = new now.constructor;
-			if (JSON.stringify(now) !== JSON.stringify(last)) {
-				let diff;
-				if (typeof now == "string") {
-					//string
-					diff = diffStr(last, now);
-				} else if (Array.isArray(now)) {
-					//array
-
-					console.log({ last, now });
-					diff = _.filter(now,
-						i => {
-							var includes = _.find(last,
-								j => this.equal(i, j)
-							);
-							return !includes;
-						}
-					);
-					console.log({ diff });
-				} else {
-					console.error("Watcher error: Object");
-					//object
-				}
-				if (this.change) await this.change(last, now, diff);
-				last = now;
-			}
+	let channel = watcher.channels.find(c => c.id == discordChannel.id);
+	if (typeof channel == "undefined") {
+		channel = {
+			id: discordChannel.id,
+			discord: discordChannel,
+			mention: mention
 		};
-		if (first) {
-			await update();
-		} else {
-			last = await this.query();
-		}
-		this.worker = setInterval(update.bind(this), interval);
+		watcher.channels.push(channel);
 	}
+	if (watcher && channel && first) {
+		let data = await createMessage(watcher);
+		send(channel, data);
+	}
+	channel.send(`Watching ${url} in ${channel}`).then(m => setTimeout(() => m.delete(), 5000)).catch(console.error);
+	console.log(`${discordChannel.name} in ${discordChannel.guild.name} is now watching ${url}¬`);
+}
 
-	stop() {
-		clearInterval(this.worker);
+async function watch(discordChannel, url, first, mention) {
+	clearWatcher(discordChannel);
+	let watcher = watchers.find(e => e.id == url);
+	void 0 === watcher && (
+		watcher = createWatcher(url, {}),
+		watchers.push(watcher)
+	);
+	let channel = watcher.channels.find(i => i.id == discordChannel.id);
+	void 0 === channel && (
+		channel = {
+			id: discordChannel.id,
+			discord: discordChannel,
+			mention: mention
+		},
+		watcher.channels.push(channel)
+	);
+	if (watcher && channel && first) {
+		console.log("first");
+		let data = await createMessage(watcher);
+		send(channel, data);
 	}
 }
 
-module.exports = Watcher;
+function clearWatcher(discordChannel) {
+	console.log(watchers);
+	for (let watcher of watchers) {
+		console.log(`looking for ${discordChannel.id} in ${watcher.id} watcher`);
+		watcher.channels = watcher.channels.filter(c => c.id != discordChannel.id);
+	}
+}
+
+module.exports = { watch, clearWatcher };
