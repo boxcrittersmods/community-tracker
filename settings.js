@@ -14,15 +14,18 @@ async function reset(serverId) {
 
 async function get(serverId) {
 	if (!serverId) return {};
-	let settings = SETTINGS.filter(s => s.serverId == serverId);
+	let settings = SETTINGS.find(s => s.serverId == serverId);
 	if (!settings) {
 		let client = await connect("settings");
 		if (!client) return {};
 		let db = client.db(),
 			collection = db.collection("settings");
 		settings = await collection.findOne({ serverId }) || {};
+		SETTINGS.push(settings);
 		await disconnect(client);
 	}
+
+	console.log("GET SETTINGS:", settings);
 	return settings;
 }
 
@@ -33,17 +36,16 @@ async function set(serverId, value = {}) {
 	if (!client) return;
 
 	let id = SETTINGS.findIndex(s => s.serverId == serverId);
+	SETTINGS[id == -1 ? SETTINGS.length : id] = value;
 	db = client.db(),
 		collection = db.collection("settings");
-	if (id == -1) id = SETTINGS.length;
 	if (!await collection.findOne({ serverId })) {
 		await collection.insertOne(value);
-		SETTINGS.push(value);
 	} else {
 		await collection.replaceOne({ serverId }, value);
-		SETTINGS[id] = value;
 	}
-	console.log("saving", value);
+	console.log("SETTINGS SAVE:", value);
+	console.log("SETTINGS CACHE:", SETTINGS);
 	await disconnect(client);
 
 }

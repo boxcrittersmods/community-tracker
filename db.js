@@ -7,7 +7,7 @@ async function connect(dbName) {
 	let client = new MongoClient(uri.replace("COLLECTION", dbName), { useUnifiedTopology: true });
 	try {
 		console.log("Connected to database");
-		await client.connect({ useUnifiedTopology: true });
+		await client.connect();
 
 	} catch (error) {
 		console.log("unable to connect to database");

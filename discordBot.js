@@ -1,23 +1,26 @@
-const Discord = require("discord.js");
-const Website = require("./website");
-let stringSimilarity = require('string-similarity');
-const { LANG, LANGLIST } = require('./languages.js');
+const Discord = require("discord.js"),
+	Website = require("./website"),
+	stringSimilarity = require('string-similarity'),
+	{ LANG, LANGLIST } = require('./languages.js'),
+	wikiPages = require("./wikiPages.json"),
+	Watcher = require("./watcher"),
+	//CritterAPI = require("./critterapi/critterapi.js"),
 
-let db = require("./playerDictionary");
-let settings = require("./settings");
-//const CritterAPI = require("./critterapi/critterapi.js")
+	itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json"),
+	roomList = Website.Connect("https://boxcritters.com/base/data/rooms.json"),
+	shopList = Website.Connect("https://boxcritters.herokuapp.com/base/shops.json"),
+	itemCodeList = Website.Connect("https://api.boxcrittersmods.ga/itemcodes");
+
+
+db = require("./playerDictionary"),
+	settings = require("./settings");
+
+client = new Discord.Client;
 
 String.prototype.replaceAll = function (a, b) {
 	return this.split(a).join(b);
 };
 
-const wikiPages = require("./wikiPages.json");
-const languages = require("./languages.js");
-const Watcher = require("./watcher");
-const itemList = Website.Connect("https://boxcritters.herokuapp.com/base/items.json");
-const roomList = Website.Connect("https://boxcritters.herokuapp.com/base/rooms.json");
-
-const client = new Discord.Client;
 
 client.on("ready", async () => {
 	client.user.setPresence({ game: { name: "Box Critters", type: "PLAYING" }, status: "online" });
@@ -241,11 +244,9 @@ async function watch(guild, { channel, url, first, mention }) {
 	switch (url) {
 		case "item":
 		case "items":
-			let itemCodesJson = Website.Connect("https://api.boxcrittersmods.ga/itemcodes"),
-				shopsJson = Website.Connect("https://boxcritters.herokuapp.com/base/shops.json");
 			watcher = new Watcher(async () => {
-				let codes = await itemCodesJson.getJson(),
-					shops = await shopsJson.getJson(),
+				let codes = await itemCodeList.getJson(),
+					shops = await shopList.getJson(),
 					shop = shops.sort((a, b) => a.startDate - b.startDate)[0];
 
 				let shopItems = shop.collection.map(itemId => ({
@@ -278,21 +279,26 @@ async function watch(guild, { channel, url, first, mention }) {
 			break;
 		case "room":
 		case "rooms":
-			url = "https://boxcritters.herokuapp.com/base/rooms.json";
 			isEqual = (a, b) => {
 				return a.roomId == b.roomId;
 			};
-		default:
-			if (!url.startsWith("http")) {
-				channel.send(await LANG(channel.guild.id, "WATCH_URL_INVALID"));
-				return;
-			}
-
-			let website = Website.Connect(url);
 			watcher = new Watcher(async () => {
-				return await website.getJson();
+				return await roomList.getJson();
 
-			}, isEqual, interval, first);
+			}, isEqual, null, first);
+		default:
+
+			if (!watcher) {
+				if (!url.startsWith("http")) {
+					channel.send(await LANG(channel.guild.id, "WATCH_URL_INVALID"));
+					return;
+				}
+				let website = Website.Connect(url);
+				watcher = new Watcher(async () => {
+					return await website.getJson();
+
+				}, isEqual, null, first);
+			}
 
 			watcher.onChange(async (last, now, diff) => {
 				let send = async (data) => channel.send(mention || "", typeof data == "object" ? await lookNice(channel.guild.id, data) : data);
@@ -300,7 +306,7 @@ async function watch(guild, { channel, url, first, mention }) {
 				if (Array.isArray(diff)) {
 					diff.forEach(send);
 				} else {
-					await send(dif);
+					await send(diff);
 				}
 			});
 	}
@@ -359,7 +365,6 @@ let commands = {
 				}
 			} else {
 				id = nickname;
-
 			}
 			message.channel.startTyping();
 
@@ -459,6 +464,7 @@ let commands = {
 				mention = args[1] || "",
 				first = args[2],
 				currentSettings = await settings.get(message.guild.id);
+			console.log(currentSettings);
 			if (typeof currentSettings.watchers == "undefined") currentSettings.watchers = [];
 			let id = currentSettings.watchers.findIndex(w => w.channel == message.channel.id);
 			if (!url) {
@@ -469,15 +475,15 @@ let commands = {
 				}
 				return;
 			}
-			if (id == -1) id = currentSettings.watchers.length;
 			if (url == "clear") {
-				delete currentSettings.watchers[id];
+				currentSettings.watchers = currentSettings.watchers.filter(w => w.channel != message.channel.id);
 				message.channel.send(`Watcher for ${message.channel} has been cleared!`);
 				if (message.channel.watcher) {
 					message.channel.watcher.stop();
 					delete message.channel.watcher;
 				}
 			} else {
+				if (id == -1) id = currentSettings.watchers.length;
 				currentSettings.watchers[id] = {
 					url,
 					mention,
