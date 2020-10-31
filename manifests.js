@@ -1,8 +1,11 @@
+const { getCloseset } = require("./util");
+
 const Website = require("./website"),
 
 
 	listFunc = type => async () => {
-		for (var m of (await lists.manifests.getJson())) if (m.id == type) {
+		var manifests = await lists.manifests.getJson();
+		for (var m of Object.values(manifests)) if (m.id == type) {
 			lists[m.id] = async () => Website.Connect(m.src);
 			return await lists[m.id]();
 		}

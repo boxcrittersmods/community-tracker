@@ -1,11 +1,12 @@
+const { getCloseset } = require("./util");
+
 const Discord = require("discord.js"),
 	Website = require("./website"),
-	stringSimilarity = require('string-similarity'),
 	{ LANG, LANG_LIST } = require('./languages.js'),
 	{ watch, clearWatcher } = require("./watcher"),
 	{ getItem, getRoom } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
-	db = require("./playerDictionary"),
+	playerDictionary = require("./playerDictionary"),
 	settings = require("./settings"),
 
 	client = new Discord.Client;
@@ -23,7 +24,7 @@ client.on("ready", async () => {
 		let guildSettings = await settings.get(guild.id);
 		let getChannel = id => guild.channels.cache.get(id);
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
-			watcher => watch(getChannel(watcher.channel), watcher.url, watcher.mention, watcher.first)
+			watcher => watch(getChannel(watcher.channel), watcher.url, watcher.mention)
 		);
 	});
 });
@@ -62,11 +63,11 @@ let commands = {
 	"lookup": {
 		args: ["playerid"], call: async function (message, args) {
 			let nickname = args.join(" ");
-			let playerNicknames = await db.list();
+			let playerNicknames = await playerDictionary.list();
 			let similarity = getCloseset(playerNicknames, nickname);
 			let id;
 			if (similarity.rating > .7) {
-				id = await db.get(playerNicknames[similarity.index]);
+				id = await playerDictionary.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
 					await message.channel.send(await LANG(message.guild.id, "LOOKUP_100"));
 
@@ -89,8 +90,8 @@ let commands = {
 			let body = Website.Connect("https://boxcritters.com/data/player/" + id).getText();
 			try {
 				let data = JSON.parse(body);
-				if (!await db.get(data.nickname)) {
-					await db.add(id, data.nickname);
+				if (!await playerDictionary.get(data.nickname)) {
+					await playerDictionary.add(id, data.nickname);
 					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
 						NICKNAME: data.nickname,
 						ID: id
@@ -209,21 +210,6 @@ let commands = {
 	}
 };
 
-/**
- * 
- * @param {Array.<String>} array 
- * @param {String} value 
- */
-function getCloseset(array, value) {
-	let similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
-	console.log("Similarities of " + value, similarity.ratings);
-	return {
-		value: array[similarity.bestMatchIndex],
-		rating: similarity.ratings[similarity.bestMatchIndex].rating,
-		index: similarity.bestMatchIndex,
-		ratings: similarity.ratings
-	};
-}
 
 async function parseCommand(message) {
 	message.channel.startTyping();
@@ -288,7 +274,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!bc')) {
+	if (message.content.toLowerCase().startsWith('!test')) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });

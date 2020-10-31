@@ -3,7 +3,6 @@
 const _ = require('lodash'),
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
-	{ LANG_TIME } = require('./languages.js'),
 	interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild.id, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
@@ -20,7 +19,7 @@ const _ = require('lodash'),
 		createWatcher("items", {
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
-					shop = (await (await lists.shops()).getJson()).sort((a, b) => a.startDate - b.startDate),
+					shop = (await (await lists.shops()).getJson()).sort((a, b) => a.startDate - b.startDate)[0],
 					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" }));
 				return codes.concat(shopItems).sort((e, t) => new Date(t.dateReleased) - new Date(e.dateReleased));
 			},
@@ -74,30 +73,7 @@ function diffStr(str1, str2) {
 	return diff;
 }
 
-async function watch(discordChannel, url, mention, first,) {
-	let watcher = watchers.find(w => w.id == url);
-	if (typeof watcher == "undefined") {
-		watcher = createWatcher(url);
-		watchers.push(watchers);
-	}
-	let channel = watcher.channels.find(c => c.id == discordChannel.id);
-	if (typeof channel == "undefined") {
-		channel = {
-			id: discordChannel.id,
-			discord: discordChannel,
-			mention: mention
-		};
-		watcher.channels.push(channel);
-	}
-	if (watcher && channel && first) {
-		let data = await createMessage(watcher);
-		send(channel, data);
-	}
-	channel.send(`Watching ${url} in ${channel}`).then(m => setTimeout(() => m.delete(), 5000)).catch(console.error);
-	console.log(`${discordChannel.name} in ${discordChannel.guild.name} is now watching ${url}¬`);
-}
-
-async function watch(discordChannel, url, first, mention) {
+async function watch(discordChannel, url, mention, first) {
 	clearWatcher(discordChannel);
 	let watcher = watchers.find(e => e.id == url);
 	void 0 === watcher && (
