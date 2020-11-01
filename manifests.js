@@ -1,23 +1,24 @@
-const { getCloseset } = require("./util");
-
-const Website = require("./website"),
+const devProdConfig = require("./devProdConfig"),
+	{ getCloseset } = require("./util"),
+	Website = require("./website"),
 
 
 	listFunc = type => async () => {
-		var manifests = await lists.manifests.getJson();
-		for (var m of Object.values(manifests)) if (m.id == type) {
+		let manifests = await lists.manifests.getJson();
+		for (let m of Object.values(manifests)) if (m.id == type) {
+			if (!m.src.startsWith("http")) m.src = "https://boxcritters.com/play/" + m.src;
 			lists[m.id] = async () => Website.Connect(m.src);
 			return await lists[m.id]();
 		}
 	},
 	lists = {
 		//manifests: Website.Connect("https://boxcritters.com/play/manifest.json"),
-		manifests: Website.Connect("https://api.boxcrittersmods.ga/manifests"),
+		manifests: Website.Connect(`${devProdConfig.bcmcApi}/manifests`),
 		items: listFunc("items"),
 		rooms: listFunc("rooms"),
 		shops: listFunc("shops"),
 	},
-	itemCodeList = Website.Connect("https://api.boxcrittersmods.ga/itemcodes");
+	itemCodeList = Website.Connect(`${devProdConfig.bcmcApi}/itemcodes`);
 
 
 

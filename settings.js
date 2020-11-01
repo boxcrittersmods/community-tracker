@@ -25,7 +25,7 @@ async function get(serverId) {
 		await disconnect(client);
 	}
 
-	console.log("GET SETTINGS:", settings);
+	//console.log("GET SETTINGS:", settings);
 	return settings;
 }
 
@@ -44,8 +44,8 @@ async function set(serverId, value = {}) {
 	} else {
 		await collection.replaceOne({ serverId }, value);
 	}
-	console.log("SETTINGS SAVE:", value);
-	console.log("SETTINGS CACHE:", SETTINGS);
+	//console.log("SETTINGS SAVE:", value);
+	//console.log("SETTINGS CACHE:", SETTINGS);
 	await disconnect(client);
 
 }

@@ -1,5 +1,5 @@
-const { connect, disconnect } = require("./db");
-let playerDictionary = [];
+const { connect, disconnect } = require("./db"),
+	playerDictionary = [];
 
 async function addToDB(playerId, nickname) {
 	let client = await connect("playerIds");

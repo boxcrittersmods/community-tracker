@@ -1,6 +1,3 @@
-const { map } = require("lodash");
-const { getCloseset } = require("./util");
-
 const Discord = require("discord.js"),
 	Website = require("./website"),
 	{ LANG, LANG_LIST } = require('./languages.js'),
@@ -8,6 +5,9 @@ const Discord = require("discord.js"),
 	{ getItem, getRoom } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
 	playerDictionary = require("./playerDictionary"),
+	devProdConfig = require("./devProdConfig"),
+	{ getCloseset } = require("./util"),
+
 	settings = require("./settings"),
 
 	client = new Discord.Client;
@@ -91,9 +91,8 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
 
-			let body = Website.Connect("https://boxcritters.com/data/player/" + id).getText();
 			try {
-				let data = JSON.parse(body);
+				let data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
 					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
@@ -162,7 +161,7 @@ let commands = {
 			let embed = new Discord.MessageEmbed();
 			embed.setTitle(await LANG(message.guild.id, "SETTINGS_HEADER", { SERVER: serverName }));
 			if (Object.keys(currentSettings).length == 0) embed.setDescription(await LANG(message.guild.id, "SETTINGS_NONE"));
-			for (const k in currentSettings) {
+			for (let k in currentSettings) {
 				if (!key || k == key) embed.addField(k[0].toUpperCase() + k.substring(1), "```" + JSON.stringify(currentSettings[k], null, 2) + "```");
 			}
 			message.channel.send({ embed });
@@ -285,7 +284,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith(process.env.LOCAL ? '!test' : '!bc')) {
+	if (message.content.toLowerCase().startsWith(devProdConfig.prefix)) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });

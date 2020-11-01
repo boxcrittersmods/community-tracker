@@ -1,6 +1,6 @@
 
-const fetch = require('node-fetch');
-const { JSDOM } = require("jsdom");
+const fetch = require('node-fetch'),
+	{ JSDOM } = require("jsdom");
 
 function Website(body) {
 	if (!new.target) return;

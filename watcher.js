@@ -5,7 +5,7 @@ const _ = require('lodash'),
 
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
-	interval = 120e3,
+	interval = 5000,//120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild.id, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
 	createWatcher = (id, {
@@ -56,10 +56,12 @@ async function createMessage(watcher) {
 }
 
 async function tick() {
+	console.log("WATCHER TICK");
 	for (let watcher of watchers) {
 		if (0 == watcher.channels.length) continue;
+		console.log("Updateing watcher " + watcher.id);
 		let data = await createMessage(watcher);
-		for (let channel of watcher.channels) send(channel, data);
+		if (void 0 != data && Array.isArray(data) ? data.length > 0 : 1) for (let channel of watcher.channels) console.log(`Sending updates to ${channel.discord.name} in ${channel.discord.guild.name}`), send(channel, data);
 		await sleep(interval);
 	}
 	setTimeout(tick, interval);
@@ -91,15 +93,16 @@ async function watch(discordChannel, url, mention, first) {
 		},
 		watcher.channels.push(channel)
 	);
-	if (watcher && channel && first) {
+	if (first) {
 		console.log("first");
 		let data = await createMessage(watcher);
 		send(channel, data);
+	} else {
+		watcher.last = await watcher.query();
 	}
 }
 
 function clearWatcher(discordChannel) {
-	console.log(watchers);
 	for (let watcher of watchers) {
 		console.log(`looking for ${discordChannel.id} in ${watcher.id} watcher`);
 		watcher.channels = watcher.channels.filter(c => c.id != discordChannel.id);

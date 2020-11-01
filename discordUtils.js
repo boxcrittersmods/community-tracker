@@ -2,10 +2,11 @@ const Website = require("./website"),
 	Discord = require("discord.js"),
 	wikiPages = require("./wikiPages.json"),
 	{ getItemName } = require("./manifests"),
-	{ LANG, LANG_LIST, LANG_TIME } = require('./languages.js'),
+	{ LANG, LANG_TIME } = require('./languages.js'),
+	devProdConfig = require("./devProdConfig"),
 
 	camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`),
-	truncate = (i, l) => i.length > l ? i.substring(0, l - 3) + '...' : i;
+	truncate = (i, l) => i.length > l ? i.substring(0, l - 3 - (i.startsWith("```") ? 3 : 0)) + '...' + (i.startsWith("```") ? "```" : "") : i;
 
 
 function getCritterEmoji(critterId) {
@@ -56,17 +57,22 @@ async function lookNice(guildId, data) {
 			data.gear = data.gear || [];
 		}
 		if (data.itemId) {
-			data.name = await LANG(guildId, "ITEM_NAME_" + data.itemId.toUpperCase());
+			data.name = await LANG(guildId, `ITEM_NAME_${data.itemId.toUpperCase()}`);
 			if (data.slot) data.slot = await LANG(guildId, "ITEM_SLOT_" + data.slot.toUpperCase());
 			if (data.theme) data.theme = await LANG(guildId, "ITEM_THEME_" + data.theme.toUpperCase());
+
+
+			embed.setImage(data.sprites);
+			delete data.sprites;
 		}
 
 		if (data.roomId) {
-			data.name = await LANG(guildId, "ROOM_NAME_" + data.roomId.toUpperCase());
+			data.name = await LANG(guildId, `ROOM_NAME_${data.roomId.toUpperCase()}`);
+
 		}
 
 		if (data.background || data.foreground) {
-			embed.attachFiles("https://api.boxcrittersmods.ga/room/static/" + data.roomId + ".png").setImage("attachment://" + data.roomId + ".png");
+			embed.attachFiles(`${devProdConfig.bcmcApi}/room/static/${data.roomId}.png`).setImage(`attachment://${data.roomId}.png`);
 		}
 	}
 
@@ -76,7 +82,7 @@ async function lookNice(guildId, data) {
 		switch (key) {
 			case "name":
 			case "nickname":
-				embed.setTitle("__**" + data[key] + "**__");
+				embed.setTitle(`__**${data[key]}**__`);
 				if (data.itemId) {
 					embed.setURL(await getWikiUrl(data.itemId));
 				}
@@ -103,7 +109,7 @@ async function lookNice(guildId, data) {
 				break;
 			case "gear":
 				//Gear Display
-				embed.attachFiles([{ name: "player.png", attachment: "https://api.boxcrittersmods.ga/player/" + data.playerId + ".png" }]).setImage("attachment://player.png");
+				embed.attachFiles([{ name: "player.png", attachment: `${devProdConfig.bcmcApi}/player/${data.playerId}.png` }]).setImage("attachment://player.png");
 
 				//Gear List
 				let gearList = await Promise.all(data[key].map(async i => {
@@ -117,16 +123,10 @@ async function lookNice(guildId, data) {
 				let sprites = data[key];
 				embed.addField(await LANG(guildId, "FIELD_SPRITE_SHEET"), sprites.images.join("\n"));
 				embed.addField(await LANG(guildId, "FIELD_SPRITES"), data[key]);
-				embed.addField(await LANG(guildId, "FIELD_ANIMATION"), "https://api.boxcrittersmods.ga/room/" + data.roomId + ".gif");
+				embed.addField(await LANG(guildId, "FIELD_ANIMATION"), `${devProdConfig.bcmcApi}/room/${data.roomId}.gif`);
 				break;
 			case "icon":
 				embed.setThumbnail(data[key]);
-				break;
-			case "triggers":
-				embed.addField(await LANG(guildId, "FIELD_TRIGGERS"), truncate(data[key].map(JSON.stringify).join("\n"), 1024));
-				break;
-			case "sprites":
-				embed.setImage(data[key]);
 				break;
 			case "playerId":
 				embed.addField(await LANG(guildId, "FIELD_PLAYER_ID"), `[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`);
