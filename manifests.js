@@ -6,6 +6,7 @@ const devProdConfig = require("./devProdConfig"),
 	listFunc = type => async () => {
 		let manifests = await lists.manifests.getJson();
 		for (let m of Object.values(manifests)) if (m.id == type) {
+			console.log("Manifest Get " + m);
 			if (!m.src.startsWith("http")) m.src = "https://boxcritters.com/play/" + m.src;
 			lists[m.id] = async () => Website.Connect(m.src);
 			return await lists[m.id]();
