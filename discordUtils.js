@@ -26,11 +26,13 @@ async function lookNice(guildId, data) {
 		.setColor(0x55cc11);
 	let message = { embed, files: [] };
 	async function field(key) {
-		let value = data[key];
-		let type = typeof (value);
-		let boolean = type == "boolean";
-		if (boolean) {
+		let value = data[key],
+			type = typeof value;
+		if (type == "boolean") {
 			value = value ? "✅" : "❌";
+		}
+		if (type == "object") {
+			value = "```json\n" + JSON.stringify(value, null, 2) + "```";
 		}
 		if (!value) return;
 		key = await LANG(guildId, "FIELD_" + camelToSnakeCase(key).toUpperCase());

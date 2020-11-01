@@ -17,6 +17,7 @@
 	"homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
 	"dependencies": {
 		"discord.js": "^12.4.1",
+		"dotenv": "^8.2.0",
 		"gif-encoder-2": "^1.0.5",
 		"jsdom": "^16.4.0",
 		"lodash": "^4.17.20",

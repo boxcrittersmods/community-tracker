@@ -1,9 +1,10 @@
+const { map } = require("lodash");
 const { getCloseset } = require("./util");
 
 const Discord = require("discord.js"),
 	Website = require("./website"),
 	{ LANG, LANG_LIST } = require('./languages.js'),
-	{ watch, clearWatcher } = require("./watcher"),
+	{ watch, clearWatcher, watchers } = require("./watcher"),
 	{ getItem, getRoom } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
 	playerDictionary = require("./playerDictionary"),
@@ -32,7 +33,10 @@ client.on("ready", async () => {
 let commands = {
 	"ping": {
 		args: [], call: async function (message, args) {
-			message.channel.send(await LANG(message.guild.id, "PING_RESPONSE"));
+			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
+			message.channel.send("message created timestamp:" + message.createdTimestamp);
+			message.channel.send("Date.now():" + Date.now());*/
+			message.channel.send(await LANG(message.guild.id, "PING_RESPONSE", { PING: Date.now() - message.createdTimestamp }));
 		}
 	},
 	"echo": {
@@ -190,7 +194,14 @@ let commands = {
 				}
 				return;
 			}
-			if (url == "clear") {
+			if (url == "debug") {
+				message.channel.send("```json\n" + JSON.stringify(watchers, null, 2) + "```");
+				return;
+			}
+			if (url == "types") {
+				message.channel.send("```" + watchers.map(w => `${w.id}+(${w.channels.length} watchers)`).join("\n") + "```");
+				return;
+			} else if (url == "clear") {
 				currentSettings.watchers = currentSettings.watchers.filter(w => w.channel != message.channel.id);
 				message.channel.send(`Watcher for ${message.channel} has been cleared!`);
 				await clearWatcher(message.channel);
@@ -274,7 +285,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith('!test')) {
+	if (message.content.toLowerCase().startsWith(process.env.LOCAL ? '!test' : '!bc')) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });

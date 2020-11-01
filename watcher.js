@@ -1,6 +1,8 @@
 "strict mode";
 
 const _ = require('lodash'),
+	Website = require("./website"),
+
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
 	interval = 120e3,
@@ -104,4 +106,4 @@ function clearWatcher(discordChannel) {
 	}
 }
 
-module.exports = { watch, clearWatcher };
+module.exports = { watchers, watch, clearWatcher };
