@@ -1,4 +1,4 @@
-module.exports = void 0 == process.env.DEV ?
+module.exports = process.env.LOCAL ?
 	{
 		prefix: "!test",
 		bcmcApi: "http://localhost:3000"
