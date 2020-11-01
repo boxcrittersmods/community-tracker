@@ -93,7 +93,7 @@ async function watch(discordChannel, url, mention, first) {
 		},
 		watcher.channels.push(channel)
 	);
-	discordChannel.send(`Watching ${watcher.id} in ${discordChannel}.`).then(w => w.delete(3000));
+	discordChannel.send(`Watching ${watcher.id} in ${discordChannel}.`).then(w => setTimeout(w.delete(), 3000));
 	if (first) {
 		console.log("first");
 		let data = await createMessage(watcher);
