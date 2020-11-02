@@ -47,12 +47,13 @@ const _ = require('lodash'),
 	];
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-async function createMessage(watcher) {
+async function createMessage(watcher, force) {
 	let now = await watcher.query(),
 		last = watcher.last;
 	void 0 == last && (last = new now.constructor);
-	let diff = _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
+	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
+	console.log({ now, last, diff, data });
 	watcher.last = now;
 	return data;
 }
@@ -112,7 +113,7 @@ async function watch(discordChannel, url, mention, first) {
 	} else {
 		console.log("watcher", watcher);
 		discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
-		let data = await createMessage(watcher);
+		let data = await createMessage(watcher,true);
 		console.log("data", data);
 		send(channel, data);
 	}
