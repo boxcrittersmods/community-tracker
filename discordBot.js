@@ -90,9 +90,9 @@ let commands = {
 			async function invalidError() {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
-
+			let data;
 			try {
-				let data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
+				data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
 					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
@@ -101,10 +101,10 @@ let commands = {
 					}));
 				}
 				data.critterId = data.critterId || "hamster";
-				message.channel.send(await lookNice(message.guild.id, data));
 			} catch (e) {
 				invalidError();
 			}
+			message.channel.send(await lookNice(message.guild, data));
 		}
 	},
 	"room": {
@@ -115,7 +115,7 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild.id, room));
+			message.channel.send(await lookNice(message.guild, room));
 			if (room.music) {
 				await message.channel.send({ files: [room.music] });
 			}
@@ -129,7 +129,7 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "ITEM_INVALID", { ITEM: item }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild.id, item));
+			message.channel.send(await lookNice(message.guild, item));
 		}
 	},
 	"settings": {
@@ -189,16 +189,18 @@ let commands = {
 				if (id == -1) {
 					message.channel.send("This channel does not have a watcher.");
 				} else {
-					message.channel.send(await lookNice(message.guild.id, currentSettings.watchers[id]));
+					message.channel.send(await lookNice(message.guild, currentSettings.watchers[id]));
 				}
 				return;
 			}
 			if (url == "debug") {
-				message.channel.send("```json\n" + JSON.stringify(watchers, null, 2) + "```");
+				console.log(watchers);
+				message.channel.send("Outputed to console");
+				//message.channel.send("```json\n" + JSON.stringify(watchers, null, 2) + "```");
 				return;
 			}
 			if (url == "types") {
-				message.channel.send("```" + watchers.map(w => `${w.id}+(${w.channels.length} watchers)`).join("\n") + "```");
+				message.channel.send("```" + watchers.map(w => `${w.id} (${w.channels.length} watchers)`).join("\n") + "```");
 				return;
 			} else if (url == "clear") {
 				currentSettings.watchers = currentSettings.watchers.filter(w => w.channel != message.channel.id);
@@ -211,8 +213,11 @@ let commands = {
 					mention,
 					channel: message.channel.id
 				};
-
-				await watch(message.channel, url, mention, first);
+				try {
+					await watch(message.channel, url, mention, first);
+				} catch (error) {
+					console.error(error);
+				}
 			}
 			await settings.set(message.guild.id, currentSettings);
 

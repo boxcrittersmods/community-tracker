@@ -9,7 +9,7 @@ const Website = require("./website"),
 	truncate = (i, l) => i.length > l ? i.substring(0, l - 3 - (i.startsWith("```") ? 3 : 0)) + '...' + (i.startsWith("```") ? "```" : "") : i;
 
 
-function getCritterEmoji(critterId) {
+function getCritterEmoji(client, critterId) {
 	if ("snail" == critterId) return "<:rsnail:701095041426391091>";
 	let boxCutters = client.guilds.cache.get("570411578139344926");
 	return boxCutters ? boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterId.toLowerCase()) : critterId;
@@ -22,7 +22,8 @@ async function getWikiUrl(itemId) {
 }
 
 
-async function lookNice(guildId, data) {
+async function lookNice(guild, data) {
+	let guildId = guild.id;
 	let embed = new Discord.MessageEmbed()
 		.setColor(0x55cc11);
 	let message = { embed, files: [] };
@@ -92,7 +93,7 @@ async function lookNice(guildId, data) {
 				data[key] = data[key]
 					|| "hamster";
 				//|| "penguin";
-				embed.addField(title, getCritterEmoji(data[key]), true);
+				embed.addField(title, getCritterEmoji(guild.client, data[key]), true);
 				break;
 			case "created":
 			case "lastSeen":

@@ -14,15 +14,17 @@ function Website(body) {
 
 Website.Connect = function (url, body, method = "GET") {
 	if (typeof body == "undefined") {
-		body = async () => fetch(url);
+		body = async () => await fetch(url);
 	} else {
-		body = async () => fetch(url, {
+		body = async () => await fetch(url, {
 			method,
 			body: JSON.stringify(body),
 			headers: { 'Content-Type': 'application/json' }
 		});
 	}
 	let website = new Website(body);
+	website.url = url;
+	website.method = method;
 	return website;
 };
 
@@ -32,6 +34,7 @@ Website.prototype.getJson = async function () {
 		let body = await this.body();
 		json = body.json();
 	} catch (error) {
+		console.error("Website Error: ", error);
 		json = {};
 	}
 	return json;
