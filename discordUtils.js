@@ -12,7 +12,10 @@ const Website = require("./website"),
 function getCritterEmoji(client, critterId) {
 	if ("snail" == critterId) return "<:rsnail:701095041426391091>";
 	let boxCutters = client.guilds.cache.get("570411578139344926");
-	return boxCutters ? boxCutters.emojis.find(emoji => emoji.name.toLowerCase() === "critter" + critterId.toLowerCase()) : critterId;
+	if (typeof boxCutters != "undefined") {
+		return boxCutters.emojis.cache.find(emoji => emoji.name.toLowerCase() === "critter" + critterId.toLowerCase());
+	}
+	return critterId;
 }
 
 
