@@ -7,7 +7,7 @@ const _ = require('lodash'),
 
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
-	interval = 5000,//120e3,
+	interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
 	createWatcher = (id, {
@@ -113,7 +113,7 @@ async function watch(discordChannel, url, mention, first) {
 	} else {
 		console.log("watcher", watcher);
 		discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
-		let data = await createMessage(watcher,true);
+		let data = await createMessage(watcher, true);
 		console.log("data", data);
 		send(channel, data);
 	}
