@@ -97,14 +97,14 @@ async function lookNice(guild, data) {
 				break;
 			case "created":
 			case "lastSeen":
-				langTime = LANG_TIME(guildId, data[key]);
+				langTime = await LANG_TIME(guildId, data[key]);
 				data[key] = (key == "lastSeen" ? (langTime.time == await LANG(guildId, "TIME_TODAY") ? "🟢 " : "🔴 ") : "")
 					+ await LANG(guildId, "TIME_LABEL_" + camelToSnakeCase(key).toUpperCase()) + " " +
 					`${langTime.time} (${langTime.dateString})`;
 				await field(key);
 				break;
 			case "dateReleased":
-				langTime = LANG_TIME(guildId, data[key]);
+				langTime = await LANG_TIME(guildId, data[key]);
 				data[key] = `${langTime.time} (${langTime.dateString})`;
 				await field(key);
 				break;

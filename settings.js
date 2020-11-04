@@ -4,7 +4,7 @@ const { connect, disconnect } = require("./db"),
 async function reset(serverId) {
 	if (!serverId) return;
 	SETTINGS = SETTINGS.filter(s => s.serverId !== serverId);
-	let client = await connect("settings");
+	let client = await connect();
 	if (!client) return;
 	let db = client.db(),
 		collection = db.collection("settings");

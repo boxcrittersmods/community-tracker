@@ -1,12 +1,10 @@
 "strict mode";
 
-const { list } = require('./playerDictionary');
-
 const _ = require('lodash'),
 	Website = require("./website"),
-
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
+
 	interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
@@ -45,6 +43,7 @@ const _ = require('lodash'),
 				))
 		})
 	];
+
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 async function createMessage(watcher, force) {

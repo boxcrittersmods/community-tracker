@@ -2,7 +2,7 @@ const { connect, disconnect } = require("./db"),
 	playerDictionary = [];
 
 async function addToDB(playerId, nickname) {
-	let client = await connect("playerIds");
+	let client = await connect();
 	if (!client) return;
 	let db = client.db();
 	let collection = db.collection("playerIds");
