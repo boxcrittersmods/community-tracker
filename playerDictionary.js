@@ -14,7 +14,7 @@ async function addToDB(playerId, nickname) {
 }
 
 async function getUsenames() {
-	let client = await connect("playerIds");
+	let client = await connect();
 	if (!client) return playerDictionary.map(i => i.nickname);
 	let db = client.db();
 	let collection = db.collection("playerIds");
@@ -27,7 +27,7 @@ async function getUsenames() {
 async function getFromDB(nickname) {
 	let player = playerDictionary.find(p => p.nickname == nickname);
 	if (!player) {
-		let client = await connect("playerIds");
+		let client = await connect();
 		if (!client) return;
 		let db = client.db();
 		let collection = db.collection("playerIds");

@@ -4,8 +4,9 @@ const _ = require('lodash'),
 	Website = require("./website"),
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
+	{ getWatcherCache, cacheWatcher } = require("./watcherCache");
 
-	interval = 120e3,
+interval = 5e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
 	createWatcher = (id, {
@@ -53,6 +54,7 @@ async function createMessage(watcher, force) {
 	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
 	console.log({ now, last, diff, data });
+	cacheWatcher(watcher.id, now);
 	watcher.last = now;
 	return data;
 }
@@ -88,6 +90,12 @@ function diffStr(str1, str2) {
 	return diff;
 }
 
+async function setupInitialLastValue(watcher) {
+	let data = await getWatcherCache(watcher.id);
+	if (void 0 == data) data = await watcher.query();
+	watcher.last = data;
+}
+
 async function watch(discordChannel, url, mention, first) {
 	clearWatcher(discordChannel);
 	console.log(arguments);
@@ -108,7 +116,7 @@ async function watch(discordChannel, url, mention, first) {
 	);
 	discordChannel.send(`Watching ${watcher.id} in ${discordChannel}.`).then(e => setTimeout(() => e.delete(), 10e3));
 	if (void 0 == first) {
-		watcher.last = await watcher.query();
+		setupInitialLastValue(watcher);
 	} else {
 		console.log("watcher", watcher);
 		discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));

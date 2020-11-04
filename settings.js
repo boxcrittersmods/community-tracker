@@ -16,7 +16,7 @@ async function get(serverId) {
 	if (!serverId) return {};
 	let settings = SETTINGS.find(s => s.serverId == serverId);
 	if (!settings) {
-		let client = await connect("settings");
+		let client = await connect();
 		if (!client) return {};
 		let db = client.db(),
 			collection = db.collection("settings");
@@ -32,7 +32,7 @@ async function get(serverId) {
 async function set(serverId, value = {}) {
 	if (!serverId) return;
 	value.serverId = serverId;
-	let client = await connect("settings");
+	let client = await connect();
 	if (!client) return;
 
 	let id = SETTINGS.findIndex(s => s.serverId == serverId);
