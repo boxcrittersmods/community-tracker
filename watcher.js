@@ -6,7 +6,7 @@ const _ = require('lodash'),
 	{ lookNice } = require("./discordUtils"),
 	{ getWatcherCache, cacheWatcher } = require("./watcherCache");
 
-interval = 5e3,
+interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
 	createWatcher = (id, {
