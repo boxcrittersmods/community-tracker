@@ -90,9 +90,8 @@ let commands = {
 			async function invalidError() {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
-			let data;
 			try {
-				data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
+				let data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
 					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
@@ -101,10 +100,10 @@ let commands = {
 					}));
 				}
 				data.critterId = data.critterId || "hamster";
+				message.channel.send(await lookNice(message.guild, data));
 			} catch (e) {
 				invalidError();
 			}
-			message.channel.send(await lookNice(message.guild, data));
 		}
 	},
 	"room": {
