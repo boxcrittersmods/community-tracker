@@ -23,8 +23,9 @@ interval = 120e3,
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
 					shop = (await lists.shops.getJson()).sort((a, b) => a.startDate - b.startDate)[0],
-					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" }));
-				return codes.concat(shopItems).sort((e, t) => new Date(t.dateReleased) - new Date(e.dateReleased));
+					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" })),
+					roomItems = (await lists.rooms.getJson()).flatMap(r => r.triggers.filter(t => t.server && t.server.grantItem).map(t => ({ id: t.server.grantItem, code: `Found in ${r.name}` })));
+				return codes.concat(shopItems, roomItems).sort((a, b) => new Date(b.dateReleased) - new Date(a.dateReleased));
 			},
 			equality: (a, b) => a.name == b.name,
 			createMessage: async (diff, last, now) =>
