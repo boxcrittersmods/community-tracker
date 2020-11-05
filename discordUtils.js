@@ -81,6 +81,7 @@ async function lookNice(guild, data) {
 	}
 
 	for (const key in data) {
+		if (void 0 == data[key]) continue;
 		let langTime;
 		//if(typeof(data[key]) == "object") continue;
 		switch (key) {
