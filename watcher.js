@@ -22,9 +22,8 @@ interval = 120e3,
 		createWatcher("items", {
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
-					shop = (await lists.shops.getJson()).sort((a, b) => a.startDate - b.startDate)[0],
-					shopItems = shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" })),
-					roomItems = (await lists.rooms.getJson()).flatMap(r => r.triggers.filter(t => t.server && t.server.grantItem).map(t => ({ name: t.server.grantItem, code: `Found in ${r.name}` })));
+					shopItems = (await lists.shops.getJson()).flatMap(shop => shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" }))),
+					roomItems = (await lists.rooms.getJson()).flatMap(room => room.triggers.filter(trigger => trigger.server && trigger.server.grantItem).map(trigger => ({ name: trigger.server.grantItem, code: `Found in ${room.name}` })));
 				return codes.concat(shopItems, roomItems).sort((a, b) => new Date(b.dateReleased) - new Date(a.dateReleased));
 			},
 			equality: (a, b) => a.name == b.name,
