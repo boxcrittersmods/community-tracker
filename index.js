@@ -1,5 +1,8 @@
 require('dotenv').config();
 const discordBot = require('./discordBot.js'),
-	token = process.env.DISCORD_TOKEN || require('./config/token.js').token;
+	setupDBL = require("./dbl"),
+	token = process.env.DISCORD_TOKEN || require('./config/token.js').token,
+	dblToken = process.env.DISCORD_TOKEN || require('./config/token.js').dblToken;
 
+setupDBL(dblToken, discordBot);
 discordBot.login(token);

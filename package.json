@@ -16,6 +16,7 @@
 	},
 	"homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
 	"dependencies": {
+		"dblapi.js": "^2.4.1",
 		"discord.js": "^12.4.1",
 		"dotenv": "^8.2.0",
 		"gif-encoder-2": "^1.0.5",
@@ -26,5 +27,8 @@
 		"node-fetch": "^2.6.1",
 		"path": "^0.12.7",
 		"string-similarity": "^4.0.2"
+	},
+	"engines": {
+		"yarn": "1.x"
 	}
 }
