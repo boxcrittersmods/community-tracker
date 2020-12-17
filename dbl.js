@@ -13,7 +13,7 @@ module.exports = function (dblToken, client) {
 		}, 1800000);
 	});
 
-	dbl.webhook.on('vote', vote => {
+	/*dbl.webhook.on('vote', vote => {
 		console.log(`User <@${vote.user}> (${client.users.cache.get(vote.user)}) just voted${vote.isWeekend ? " twice" : ""}!`);
-	});
+	});*/
 };
