@@ -2,9 +2,9 @@ const devProdConfig = require("./devProdConfig"),
 	{ getCloseset } = require("./util"),
 	Website = require("./website"),
 	lists = {
-		items: Website.Connect(`${devProdConfig.bcmcApi}/base/items/data.json`),
-		rooms: Website.Connect(`${devProdConfig.bcmcApi}/base/rooms/recD4d1qWaHGbnlHS/data.json`),
-		shops: Website.Connect(`${devProdConfig.bcmcApi}/base/shops/data.json`),
+		items: Website.Connect(`${devProdConfig.bcmcApi}/manifests/items`),
+		rooms: Website.Connect(`${devProdConfig.bcmcApi}/manifests/rooms`),
+		shops: Website.Connect(`${devProdConfig.bcmcApi}/manifests/shops`),
 	},
 	itemCodeList = Website.Connect(`${devProdConfig.bcmcApi}/itemcodes`);
 
