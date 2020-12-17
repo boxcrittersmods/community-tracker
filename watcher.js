@@ -19,7 +19,7 @@ interval = 120e3,
 			query: async () => await lists.rooms.getJson(),
 			equality: (a, b) => a.roomId == b.roomId,
 		}),
-		createWatcher("rooms", {
+		createWatcher("items", {
 			query: async () => await lists.items.getJson(),
 			equality: (a, b) => a.itemId == b.itemId,
 		}),
