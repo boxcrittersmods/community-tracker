@@ -118,7 +118,6 @@ async function watch(discordChannel, url, mention, first) {
 		},
 		watcher.channels.push(channel)
 	);
-	discordChannel.send(`Watching ${watcher.id} in ${discordChannel}.`).then(e => setTimeout(() => e.delete(), 10e3));
 	if (void 0 == first) {
 		setupInitialLastValue(watcher);
 	} else {

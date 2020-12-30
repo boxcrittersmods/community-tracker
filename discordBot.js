@@ -214,6 +214,8 @@ let commands = {
 				};
 				try {
 					await watch(message.channel, url, mention, first);
+					discordChannel.send(`Watching ${watcher.id} in ${message.channe;
+				}.`).then(e => setTimeout(() => e.delete(), 10e3));
 				} catch (error) {
 					console.error(error);
 				}
@@ -294,4 +296,4 @@ client.on('message', message => {
 });
 
 
-module.exports = client;
+module.exports = client;;
