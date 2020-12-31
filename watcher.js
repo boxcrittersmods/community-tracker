@@ -4,7 +4,7 @@ const _ = require('lodash'),
 	Website = require("./website"),
 	{ lists, itemCodeList, getItem } = require("./manifests"),
 	{ lookNice } = require("./discordUtils"),
-	{ getWatcherCache, cacheWatcher } = require("./watcherCache");
+	{ getWatcherCache, cacheWatcher, files } = require("./watcherCache");
 
 interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
@@ -46,7 +46,13 @@ interval = 120e3,
 						};
 					}
 				))
-		})
+		}),
+		/*createWatcher("files", {
+			query: async () => {
+				let files = await lists.files.getJson();
+				list = Object.values(files);
+			}
+		})*/
 	];
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }

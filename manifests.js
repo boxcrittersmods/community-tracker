@@ -5,6 +5,7 @@ const devProdConfig = require("./devProdConfig"),
 		items: Website.Connect(`${devProdConfig.bcmcApi}/manifests/items`),
 		rooms: Website.Connect(`${devProdConfig.bcmcApi}/manifests/rooms`),
 		shops: Website.Connect(`${devProdConfig.bcmcApi}/manifests/shops`),
+		files: Website.Connect(`${devProdConfig.bcmcApi}/textures/BoxCritters.bctp.json`)
 	},
 	itemCodeList = Website.Connect(`${devProdConfig.bcmcApi}/itemcodes`);
 
