@@ -47,12 +47,18 @@ interval = 120e3,
 					}
 				))
 		}),
-		/*createWatcher("files", {
+		createWatcher("files", {
 			query: async () => {
 				let files = await lists.files.getJson();
 				list = Object.values(files);
+				return list;
+			},
+			createMessage: async (diff, last, now) => {
+				diff.map(file => {
+					return { name: file };
+				});
 			}
-		})*/
+		})
 	];
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
@@ -111,7 +117,7 @@ async function watch(discordChannel, url, mention, first) {
 	console.log(arguments);
 	let watcher = watchers.find(e => e.id == url);
 	if (void 0 === watcher) {
-		if (!url.startsWith("http")) throw "Invalid URL or watcher preset.";
+		if (!url.startsWith("http")) throw "Invalid URL or watcher preset. " + url;
 		watcher = createWatcher(url, {}),
 			watchers.push(watcher);
 	}
