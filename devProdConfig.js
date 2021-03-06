@@ -4,5 +4,5 @@ module.exports = process.env.LOCAL ?
 		bcmcApi: /*"http://localhost:3000"*/"https://api.boxcrittersmods.ga"
 	} : {
 		prefix: "!bc",
-		bcmcApi: "https://api.boxcrittersmods.ga"
+		bcmcApi: ""
 	}
