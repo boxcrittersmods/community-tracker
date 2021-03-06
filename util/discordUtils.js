@@ -26,6 +26,7 @@ async function getWikiUrl(itemId) {
 
 
 async function lookNice(guild, data) {
+	console.log("1");
 	let guildId = guild.id;
 	let embed = new Discord.MessageEmbed()
 		.setColor(0x55cc11);
@@ -44,7 +45,6 @@ async function lookNice(guild, data) {
 		key = key.charAt(0).toUpperCase() + key.substr(1);
 		if (value) embed.addField("**" + key + "**", truncate(value.toString(), 1024), ["boolean", "number"].includes(type));
 	}
-
 	if (!Array.isArray(data)) {
 		if (data.nickname) {
 			let mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"];
@@ -114,7 +114,7 @@ async function lookNice(guild, data) {
 				break;
 			case "gear":
 				//Gear Display
-				embed.attachFiles([{ name: "player.png", attachment: `${devProdConfig.bcmcApi}/player/${data.playerId}.png` }]).setImage("attachment://player.png");
+				embed.attachFiles([{ name: "player.png", attachment: iTrackBC.bcmcAPI.playerGear+data.playerId+".png" }]).setImage("attachment://player.png");
 
 				//Gear List
 				let gearList = await Promise.all(data[key].map(async i => {
@@ -141,7 +141,7 @@ async function lookNice(guild, data) {
 				break;
 		}
 	}
-	embed.footer = "BCMC";
+	embed.footer = "created by BCMC";
 	return message;
 }
 

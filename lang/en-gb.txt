@@ -94,6 +94,7 @@ HELP_FOOTER=Want specific help?: $LINK
 LOOKUP_100=No, you know you were right. I'm not going to say how close you were. I'll just get the account for you
 LOOKUP_SIMILAR=I'm not sure who $QUERY is but it seems similar to $NICKNAME with a $SIMILARITY% similarity
 LOOKUP_ERROR_INVALID=Invalid playerId or nickname. Please look up a playerId of a player first to add their nickname to the database.\nTo look up your own id type $COMMAND into the developer console.
+LOOKUP_ERROR_SENDMESSAGE=Error sending message
 LOOKUP_SAVED=$NICKNAME has been saved to the database as $PLAYERID. You can now use the nickname to look up this player.
 ROOM_INVALID=Invaid Room: $ROOM
 ITEM_INVALID=Invalid Item: $ITEM

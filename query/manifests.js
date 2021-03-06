@@ -2,12 +2,12 @@ const devProdConfig = iTrackBC.setup,
 	{ getCloseset } = iTrackBC.require("util/util"),
 	Website = require("./website"),
 	lists = {
-		items: Website.Connect(`${devProdConfig.bcmcApi}/manifests/items`),
-		rooms: Website.Connect(`${devProdConfig.bcmcApi}/manifests/rooms`),
-		shops: Website.Connect(`${devProdConfig.bcmcApi}/manifests/shops`),
-		files: Website.Connect(`${devProdConfig.bcmcApi}/textures/BoxCritters.bctp.json`)
+		items: Website.Connect(iTrackBC.bcmcAPI.items),
+		rooms: Website.Connect(iTrackBC.bcmcAPI.rooms),
+		shops: Website.Connect(iTrackBC.bcmcAPI.shops),
+		files: Website.Connect(iTrackBC.bcmcAPI.files)
 	},
-	itemCodeList = Website.Connect(`${devProdConfig.bcmcApi}/itemcodes`);
+	itemCodeList = Website.Connect(iTrackBC.bcmcAPI.itemCodes);
 
 
 

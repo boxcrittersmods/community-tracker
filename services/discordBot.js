@@ -5,7 +5,6 @@ const Discord = require("discord.js"),
 	{ getItem, getRoom } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
-	devProdConfig = iTrackBC.setup,
 	{ getCloseset } = iTrackBC.require("util/util"),
 
 	settings = iTrackBC.require("data/settings"),
@@ -90,8 +89,11 @@ let commands = {
 			async function invalidError() {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
+			async function sendMessageError() {
+				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
+			}
 			try {
-				let data = await Website.Connect("https://boxcritters.com/data/player/" + id).getJson();
+				let data = await Website.Connect(iTrackBC.bcAPI.players + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
 					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
@@ -100,8 +102,14 @@ let commands = {
 					}));
 				}
 				data.critterId = data.critterId || "hamster";
+				try{
 				message.channel.send(await lookNice(message.guild, data));
+				} catch(e) {
+					console.log(e)
+					sendMessageError();
+				}
 			} catch (e) {
+				console.log(e);
 				invalidError();
 			}
 		}
@@ -289,7 +297,7 @@ client.on('message', message => {
 	if (message.author == client.user || message.author.bot) {
 		return;
 	}
-	if (message.content.toLowerCase().startsWith(devProdConfig.prefix)) {
+	if (message.content.toLowerCase().startsWith(iTrackBC.prefix)) {
 		parseCommand(message).catch(e => logError(message, e));
 	}
 });
