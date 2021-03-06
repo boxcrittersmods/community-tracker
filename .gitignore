@@ -59,4 +59,4 @@ typings/
 .env
 
 # secret config
-/config
+/config/token.js

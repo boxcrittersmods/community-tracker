@@ -1,9 +1,9 @@
-const Website = require("./website"),
+const Website = iTrackBC.require("query/website"),
 	Discord = require("discord.js"),
-	wikiPages = require("./wikiPages.json"),
-	{ getItemName } = require("./manifests"),
-	{ LANG, LANG_TIME } = require('./languages.js'),
-	devProdConfig = require("./devProdConfig"),
+	wikiPages = iTrackBC.wikiPages,
+	{ getItemName } = iTrackBC.require("query/manifests"),
+	{ LANG, LANG_TIME } = iTrackBC.require('query/languages.js'),
+	devProdConfig = iTrackBC.setup,
 
 	camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`),
 	truncate = (i, l) => i.length > l ? i.substring(0, l - 3 - (i.startsWith("```") ? 3 : 0)) + '...' + (i.startsWith("```") ? "```" : "") : i;

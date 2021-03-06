@@ -1,7 +1,5 @@
 const { MongoClient } = require('mongodb'),
-	dbUser = process.env.DB_USER || require("./config/token").dbUser,
-	dbPassword = process.env.DB_PASSWORD || require("./config/token").dbPassword,
-	uri = `mongodb+srv://${dbUser}:${dbPassword}@playerdictionary.mftw9.mongodb.net/lookupBot?retryWrites=true&w=majority`;
+	uri = `mongodb+srv://${iTrackBC.db.user}:${iTrackBC.db.password}@${iTrackBC.db.url}?retryWrites=true&w=majority`;
 
 async function connect() {
 	let client = new MongoClient(uri, { useUnifiedTopology: true });

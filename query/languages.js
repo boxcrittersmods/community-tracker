@@ -1,7 +1,7 @@
-const settings = require("./settings"),
+const settings = iTrackBC.require("data/settings"),
 	fs = require('fs').promises,
 	{ existsSync } = require("fs"),
-	LANG_FOLDER = __dirname + "/lang";
+	LANG_FOLDER = iTrackBC.root + "/lang";
 
 async function getServerLang(guildId) {
 	if (!guildId) return "en-gb";

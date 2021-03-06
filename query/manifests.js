@@ -1,5 +1,5 @@
-const devProdConfig = require("./devProdConfig"),
-	{ getCloseset } = require("./util"),
+const devProdConfig = iTrackBC.setup,
+	{ getCloseset } = iTrackBC.require("util/util"),
 	Website = require("./website"),
 	lists = {
 		items: Website.Connect(`${devProdConfig.bcmcApi}/manifests/items`),

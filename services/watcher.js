@@ -1,10 +1,10 @@
 "strict mode";
 
 const _ = require('lodash'),
-	Website = require("./website"),
-	{ lists, itemCodeList, getItem } = require("./manifests"),
-	{ lookNice } = require("./discordUtils"),
-	{ getWatcherCache, cacheWatcher, files } = require("./watcherCache");
+	Website = iTrackBC.require("query/website"),
+	{ lists, itemCodeList, getItem } = iTrackBC.require("query/manifests"),
+	{ lookNice } = iTrackBC.require("util/discordUtils"),
+	{ getWatcherCache, cacheWatcher, files } = iTrackBC.require("data/watcherCache");
 
 interval = 120e3,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),

@@ -1,14 +1,14 @@
 const Discord = require("discord.js"),
-	Website = require("./website"),
-	{ LANG, LANG_LIST } = require('./languages.js'),
+	Website = iTrackBC.require("query/website"),
+	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
 	{ watch, clearWatcher, watchers } = require("./watcher"),
-	{ getItem, getRoom } = require("./manifests"),
-	{ lookNice } = require("./discordUtils"),
-	playerDictionary = require("./playerDictionary"),
-	devProdConfig = require("./devProdConfig"),
-	{ getCloseset } = require("./util"),
+	{ getItem, getRoom } = iTrackBC.require("query/manifests"),
+	{ lookNice } = iTrackBC.require("util/discordUtils"),
+	playerDictionary = iTrackBC.require("data/playerDictionary"),
+	devProdConfig = iTrackBC.setup,
+	{ getCloseset } = iTrackBC.require("util/util"),
 
-	settings = require("./settings"),
+	settings = iTrackBC.require("data/settings"),
 
 	client = new Discord.Client;
 
