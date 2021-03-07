@@ -1,7 +1,7 @@
 # Community Tracker
 
 ## Credits
-Blinkey - Room image prop layering
-Alvaritio - Hosting and `es-ar`
-Flines - `fr-FR`
-Flopinou - `pt-br`
+* @BlinkingBerry - [Room image prop layering](https://github.com/boxcrittersmods/bc-mod-api/blob/master/src/routes/room.js)
+* @Alvarito050506 - Hosting and [`es-ar`](lang/fr-FR.txt)
+* @flines - [`fr-FR`](lang/fr-FR.txt)
+* @Flopinou - [`pt-br`](lang/pt-br.txt)
