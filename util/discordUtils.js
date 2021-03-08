@@ -25,7 +25,7 @@ async function getWikiUrl(itemId) {
 }
 
 
-async function lookNice(guild, data) {
+async function lookNice(guild, data,originalAuthor) {
 	console.log("1");
 	let guildId = guild.id;
 	let embed = new Discord.MessageEmbed()
@@ -128,20 +128,22 @@ async function lookNice(guild, data) {
 				let sprites = data[key];
 				embed.addField(await LANG(guildId, "FIELD_SPRITE_SHEET"), sprites.images.join("\n"));
 				embed.addField(await LANG(guildId, "FIELD_SPRITES"), data[key]);
-				embed.addField(await LANG(guildId, "FIELD_ANIMATION"), `${devProdConfig.bcmcApi}/room/${data.roomId}.gif`);
+				embed.addField(await LANG(guildId, "FIELD_ANIMATION"), `${iTrackBC.bcmcAPI.roomPreview}${data.roomId}.gif`);
 				break;
 			case "icon":
 				embed.setThumbnail(data[key]);
 				break;
 			case "playerId":
-				embed.addField(await LANG(guildId, "FIELD_PLAYER_ID"), `[${data.playerId}](https://boxcritters.com/data/player/${data.playerId})`);
+				embed.addField(await LANG(guildId, "FIELD_PLAYER_ID"), `[${data.playerId}](${iTrackBC.bcAPI.players}${data.playerId})`);
 				break;
 			default:
 				await field(key);
 				break;
 		}
 	}
-	embed.footer = "created by BCMC";
+	let fText = "iTrackBC is created by BCMC";
+	if(originalAuthor) fText = "Command sent by " + originalAuthor.username + " | " + fText;
+	embed.setFooter(fText);
 	return message;
 }
 

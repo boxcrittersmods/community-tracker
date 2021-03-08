@@ -26,7 +26,8 @@ var iTrackBC = {
         shops:bcmcAPI+"/manifests/shops",
         files:bcmcAPI+"/textures/BoxCritters.bctp.json",
         itemCodes:bcmcAPI+"/itemcodes",
-        playerGear:bcmcAPI+"/player/"
+        playerGear:bcmcAPI+"/player/",
+        roomPreview:bcmcAPI+"/room/"
     }
 }
 
