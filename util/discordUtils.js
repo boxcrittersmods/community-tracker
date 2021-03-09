@@ -75,7 +75,7 @@ async function lookNice(guild, data,originalAuthor) {
 
 		}
 
-		if (data.background || data.foreground) {
+		if (data.media) {
 			embed.attachFiles(`${iTrackBC.bcmcAPI.staticRoomPreview}${data.roomId}.png`).setImage(`attachment://${data.roomId}.png`);
 		}
 	}

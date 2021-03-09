@@ -127,8 +127,8 @@ let commands = {
 				return;
 			}
 			message.channel.send(await lookNice(message.guild, room,message.author));
-			if (room.music) {
-				await message.channel.send({ files: [room.music] });
+			if (room.media.music) {
+				await message.channel.send({ files: [room.media.music] });
 			}
 		}
 	},
