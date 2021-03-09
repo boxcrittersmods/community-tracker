@@ -65,17 +65,27 @@ let commands = {
 	},
 	"lookup": {
 		args: ["playerid"], call: async function (message, args) {
-			let nickname = args.join(" ");
-			let playerNicknames = await playerDictionary.list();
-			let similarity = getCloseset(playerNicknames, nickname);
-			let id;
+
+			async function invalidError() {
+				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
+			}
+			async function sendMessageError() {
+				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
+			}
+			
+			let
+                nickname = args.join(" "),
+                playerNicknames = await playerDictionary.list(),
+                similarity = getCloseset(playerNicknames, nickname),
+                id,
+                messageLookupStatus;
 			if (similarity.rating > .7) {
 				id = await playerDictionary.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
-					await message.channel.send(await LANG(message.guild.id, "LOOKUP_100"));
+					messageLookupStatus = await message.channel.send(await LANG(message.guild.id, "LOOKUP_100"));
 
 				} else {
-					await message.channel.send(await LANG(message.guild.id, "LOOKUP_SIMILAR", {
+					messageLookupStatus = await message.channel.send(await LANG(message.guild.id, "LOOKUP_SIMILAR", {
 						QUERY: nickname,
 						NICKNAME: similarity.value,
 						SIMILARITY: similarity.rating * 100
@@ -85,32 +95,26 @@ let commands = {
 				id = nickname;
 			}
 			message.channel.startTyping();
-
-			async function invalidError() {
-				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
-			}
-			async function sendMessageError() {
-				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
-			}
 			try {
 				let data = await Website.Connect(iTrackBC.bcAPI.players + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
-					message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
+					await message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
 						NICKNAME: data.nickname,
 						ID: id
 					}));
 				}
 				data.critterId = data.critterId || "hamster";
-				try{
-				message.channel.send(await lookNice(message.guild, data,message.author));
+				try {
+                    await message.channel.send(await lookNice(message.guild, data,message.author));
+                    messageLookupStatus.delete();
 				} catch(e) {
-					console.log(e)
-					sendMessageError();
+					sendMessageError(e);
+                    throw e;
 				}
 			} catch (e) {
-				console.log(e);
-				invalidError();
+				invalidError(e);
+                throw e;
 			}
 		}
 	},

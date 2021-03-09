@@ -48,16 +48,16 @@ async function lookNice(guild, data,originalAuthor) {
 	if (!Array.isArray(data)) {
 		if (data.nickname) {
 			let mascots = ["RocketSnail", "nickname1", "nickname2", "Sir Champion", "Captain Pirate", "zolt", "zerg", "zork", "JglJen", "Mrchilly"];
-			if (!data.isApproved) {
+			//data.isApproved = data.isApproved || false;
+			/*if (!data.isApproved) {
 				data.nickname = await LANG(guildId, "USER_HIDDEN_NICKNAME");
-			}
+			}*/
 			if (mascots.includes(data.nickname)) {
 				data.nickname = await LANG(guildId, "USER_LABEL_MASCOT") + `: ${data.nickname}`;
 			} else {
 				data.nickname = await LANG(guildId, "USER_LABEL_PLAYER") + `: ${data.nickname}`;
 			}
 
-			data.isApproved = data.isApproved || false;
 			data.gear = data.gear || [];
 		}
 		if (data.itemId) {
@@ -76,7 +76,7 @@ async function lookNice(guild, data,originalAuthor) {
 		}
 
 		if (data.background || data.foreground) {
-			embed.attachFiles(`${devProdConfig.bcmcApi}/room/static/${data.roomId}.png`).setImage(`attachment://${data.roomId}.png`);
+			embed.attachFiles(`${iTrackBC.bcmcAPI.staticRoomPreview}${data.roomId}.png`).setImage(`attachment://${data.roomId}.png`);
 		}
 	}
 
