@@ -126,7 +126,7 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild, room,message.author));
+			await message.channel.send(await lookNice(message.guild, room,message.author));
 			if (room.media.music) {
 				await message.channel.send({ files: [room.media.music] });
 			}

@@ -32,6 +32,7 @@ async function lookNice(guild, data,originalAuthor) {
 		.setColor(0x55cc11);
 	let message = { embed, files: [] };
 	async function field(key) {
+        if(key=="layout"||key=="triggers"||key=="textures") return;
 		let value = data[key],
 			type = typeof value;
 		if (type == "boolean") {
@@ -107,6 +108,12 @@ async function lookNice(guild, data,originalAuthor) {
 					`${langTime.time} (${langTime.dateString})`;
 				await field(key);
 				break;
+            case "media":
+                let media = data[key];
+                for (const mediaType in media) {
+                    embed.addField(await LANG(guildId, "FIELD_MEDIA_"+mediaType.toUpperCase()), media[mediaType]);
+                }
+                break;
 			case "dateReleased":
 				langTime = await LANG_TIME(guildId, data[key]);
 				data[key] = `${langTime.time} (${langTime.dateString})`;
