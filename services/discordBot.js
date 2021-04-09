@@ -1,3 +1,5 @@
+const { getCritter } = require("../query/manifests");
+
 const Discord = require("discord.js"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
@@ -72,13 +74,13 @@ let commands = {
 			async function sendMessageError() {
 				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
 			}
-			
+
 			let
-                nickname = args.join(" "),
-                playerNicknames = await playerDictionary.list(),
-                similarity = getCloseset(playerNicknames, nickname),
-                id,
-                messageLookupStatus;
+				nickname = args.join(" "),
+				playerNicknames = await playerDictionary.list(),
+				similarity = getCloseset(playerNicknames, nickname),
+				id,
+				messageLookupStatus;
 			if (similarity.rating > .7) {
 				id = await playerDictionary.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
@@ -106,15 +108,15 @@ let commands = {
 				}
 				data.critterId = data.critterId || "hamster";
 				try {
-                    await message.channel.send(await lookNice(message.guild, data,message.author));
-                    messageLookupStatus.delete();
-				} catch(e) {
+					await message.channel.send(await lookNice(message.guild, data, message.author));
+					messageLookupStatus.delete();
+				} catch (e) {
 					sendMessageError(e);
-                    throw e;
+					throw e;
 				}
 			} catch (e) {
 				invalidError(e);
-                throw e;
+				throw e;
 			}
 		}
 	},
@@ -126,10 +128,21 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
 			}
-			await message.channel.send(await lookNice(message.guild, room,message.author));
+			await message.channel.send(await lookNice(message.guild, room, message.author));
 			if (room.media.music) {
 				await message.channel.send({ files: [room.media.music] });
 			}
+		}
+	},
+	"critter": {
+		args: ["critterid"], call: async function name(message, args) {
+			let critterId = args.join(" ");
+			let critter = await getCritter(critterId);
+			if (!critter) {
+				message.channel.send(await LANG(message.guild.id, "CRITTER_INVALID", { CRITTER: critter }));
+				return;
+			}
+			message.channel.send(await lookNice(message.guild, critter, message.author));
 		}
 	},
 	"item": {
@@ -140,7 +153,7 @@ let commands = {
 				message.channel.send(await LANG(message.guild.id, "ITEM_INVALID", { ITEM: item }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild, item,message.author));
+			message.channel.send(await lookNice(message.guild, item, message.author));
 		}
 	},
 	"settings": {
@@ -200,7 +213,7 @@ let commands = {
 				if (id == -1) {
 					message.channel.send("This channel does not have a watcher.");
 				} else {
-					message.channel.send(await lookNice(message.guild, currentSettings.watchers[id],message.author));
+					message.channel.send(await lookNice(message.guild, currentSettings.watchers[id], message.author));
 				}
 				return;
 			}

@@ -4,6 +4,7 @@ const devProdConfig = iTrackBC.setup,
 	lists = {
 		items: Website.Connect(iTrackBC.bcmcAPI.items),
 		rooms: Website.Connect(iTrackBC.bcmcAPI.rooms),
+		critters: Website.Connect(iTrackBC.bcmcAPI.critters),
 		shop: Website.Connect(iTrackBC.bcmcAPI.shop),
 		files: Website.Connect(iTrackBC.bcmcAPI.files)
 	},
@@ -26,11 +27,17 @@ async function getRoom(roomId) {
 	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)].filter(a => !!a), roomId).value;
 	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
+async function getCritter(critterName) {
+	let critters = await lists.critters.getJson();
+	roomId = getCloseset([...critters.map(c => c.critterId), ...critters.map(c => c.name)].filter(a => !!a), critterId).value;
+	return critters.find(c => c.critterId == critterd || c.name == critterId);
+}
 
 module.exports = {
 	lists,
 	itemCodeList,
 	getItemName,
 	getItem,
-	getRoom
+	getRoom,
+	getCritter
 };
