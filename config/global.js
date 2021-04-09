@@ -23,7 +23,7 @@ var iTrackBC = {
         root: bcmcAPI,
         items: bcmcAPI + "/manifests/items",
         rooms: bcmcAPI + "/manifests/rooms",
-        shops: bcmcAPI + "/",
+        shop: bcmcAPI + "/shop",
         files: bcmcAPI + "/textures/BoxCritters.bctp.json",
         itemCodes: bcmcAPI + "/itemcodes",
         playerGear: bcmcAPI + "/player/",

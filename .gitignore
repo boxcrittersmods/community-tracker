@@ -60,3 +60,4 @@ typings/
 
 # secret config
 /config/token.js
+services/info.txt

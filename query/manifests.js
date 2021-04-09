@@ -4,7 +4,7 @@ const devProdConfig = iTrackBC.setup,
 	lists = {
 		items: Website.Connect(iTrackBC.bcmcAPI.items),
 		rooms: Website.Connect(iTrackBC.bcmcAPI.rooms),
-		shops: Website.Connect(iTrackBC.bcmcAPI.shops),
+		shop: Website.Connect(iTrackBC.bcmcAPI.shop),
 		files: Website.Connect(iTrackBC.bcmcAPI.files)
 	},
 	itemCodeList = Website.Connect(iTrackBC.bcmcAPI.itemCodes);
