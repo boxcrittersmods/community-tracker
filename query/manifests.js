@@ -27,7 +27,7 @@ async function getRoom(roomId) {
 	roomId = getCloseset([...rooms.map(r => r.roomId), ...rooms.map(r => r.name)].filter(a => !!a), roomId).value;
 	return rooms.find(r => r.roomId == roomId || r.name == roomId);
 }
-async function getCritter(critterName) {
+async function getCritter(critterId) {
 	let critters = await lists.critters.getJson();
 	roomId = getCloseset([...critters.map(c => c.critterId), ...critters.map(c => c.name)].filter(a => !!a), critterId).value;
 	return critters.find(c => c.critterId == critterd || c.name == critterId);
