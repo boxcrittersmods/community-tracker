@@ -27,8 +27,8 @@ interval = 120e3,
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
 					shop = await lists.shop.getJson();
-				shopItems = shop.collection ? shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop" })) : [],
-					roomItems = (await lists.rooms.getJson()).flatMap(room => room.triggers.filter(trigger => trigger.server && trigger.server.grantItem).map(trigger => ({ name: trigger.server.grantItem, code: `Found in ${room.name}` })));
+				shopItems = shop.collection ? shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop", source: "shop" })) : [],
+					roomItems = (await lists.rooms.getJson()).flatMap(room => room.triggers.filter(trigger => trigger.server && trigger.server.grantItem).map(trigger => ({ name: trigger.server.grantItem, code: `Found in ${room.name}`, source: "room" })));
 				return codes.concat(shopItems, roomItems).sort((a, b) => new Date(b.dateReleased) - new Date(a.dateReleased));
 			},
 			equality: (a, b) => a.name == b.name,
@@ -43,6 +43,7 @@ interval = 120e3,
 							sprites: item.sprites,
 							dateReleased: code.dateReleased,
 							notes: code.notes,
+							cost: code.source == "shop" ? item.cost : null,
 							code: "`" + code.code + "`"
 						};
 					}
