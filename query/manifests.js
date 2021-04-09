@@ -30,7 +30,7 @@ async function getRoom(roomId) {
 async function getCritter(critterId) {
 	let critters = await lists.critters.getJson();
 	roomId = getCloseset([...critters.map(c => c.critterId), ...critters.map(c => c.name)].filter(a => !!a), critterId).value;
-	return critters.find(c => c.critterId == critterd || c.name == critterId);
+	return critters.find(c => c.critterId == critterId || c.name == critterId);
 }
 
 module.exports = {
