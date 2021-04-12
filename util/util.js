@@ -15,6 +15,7 @@ function getCloseset(array, value) {
 		ratings: similarity.ratings
 	};
 }
+function toTitle(str) { return str.toLowerCase().split(" ").map((e => e.charAt(0).toUpperCase() + e.slice(1))).join(" "); }
 
 
-module.exports = { getCloseset };
+module.exports = { getCloseset, toTitle };

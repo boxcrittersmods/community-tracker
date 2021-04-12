@@ -24,6 +24,7 @@
 		"lodash": "^4.17.20",
 		"lodash.isequal": "^4.5.0",
 		"mongodb": "^3.6.2",
+		"mwn": "^0.10.4",
 		"node-fetch": "^2.6.1",
 		"path": "^0.12.7",
 		"string-similarity": "^4.0.2"

@@ -8,6 +8,10 @@ var iTrackBC = {
     token: {
         discord: process.env.DISCORD_TOKEN || require('./token').token,
         dbl: process.env.DBL_TOKEN || require('./token').dblToken,
+        wiki: {
+            user: process.env.WIKI_USER || require('./token').wikiUser,
+            pass: process.env.WIKI_PASS || require('./token').wikiPass,
+        }
     },
     db: {
         user: process.env.DB_USER || require("./token").dbUser,
