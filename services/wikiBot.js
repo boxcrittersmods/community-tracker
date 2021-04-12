@@ -99,20 +99,18 @@ bot.setOptions({
 async function login() {
     return await bot.login();
 }
-/*
 bot.enableEmergencyShutoff({
-    page: 'User:Boxcritterswiki-bot/stop',  	// The name of the page to check 
+    page: 'User:Boxcritterswiki-bot/status',  	// The name of the page to check 
     intervalDuration: 5000, 			// check shutoff page every 5 seconds
     condition: async function (pagetext) {		// function to determine whether the bot should continue to run or not
         if (pagetext !== 'running') {
-            await bot.delete('User:Boxcritterswiki-bot/stop', "recived emergency shutdown request");	// Example implementation: if some one changes the text to something 
             return false;				// other than "running", let's decide to stop!
         } else return true;
     },
     onShutoff: function (pagetext) { 	// function to trigger when shutoff is activated
         process.exit();			// let's just exit, though we could also terminate 
     }									// any open connections, close files, etc.
-});*/
+});
 
 function getWikiPageName(bcObj) {
     return bcObj.wiki ? path.basename(bcObj.wiki) : bcObj.name || bcObj.id;
