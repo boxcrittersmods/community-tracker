@@ -24,7 +24,7 @@ const
             item: (item) =>
                 `{{stub}}
 {{ItemInfobox
-|image1 = ${item.name.replace(" ", "_")}.png
+|image1 = ${item.id}.png
 |available = No
 |type = ${toTitle(item.slot)} Item
 |theme = ${toTitle(item.theme || "none")}
@@ -50,7 +50,7 @@ const
             critter: (critter) =>
                 `{{stub}}
 {{CritterInfobox
-|image1 = ${critter.name.replace(" ", "_")}.png
+|image1 = ${critter.id}.png
 |trait = Unknown
 |release_date = TBA
 |critter_id = ${critter.id}
@@ -69,7 +69,7 @@ const
             room: room =>
                 `{{stub}}
 {{RoomInfobox
-|image1=${room.name.replace(" ", "_")}.png
+|image1=${room.id}.png
 |where=Somewhere.
 |opened=On a Date
 |room_id=${room.id}

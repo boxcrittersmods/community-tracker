@@ -337,7 +337,7 @@ async function initWikiBot() {
 		actionId: "wiki-rooms", watcherId: "rooms",
 		cb: async (data, action) => {
 			for (let d of data) {
-				await wikiBot.uploadImage(d.name, iTrackBC.bcmcAPI.roomPreview + "/static/" + d.id + ".png");
+				await wikiBot.uploadImage(d.id, iTrackBC.bcmcAPI.roomPreview + "/static/" + d.id + ".png");
 				await wikiBot.createRoomPage(d);
 
 				await sleep(interval);
@@ -350,8 +350,8 @@ async function initWikiBot() {
 		cb: async (data, action) => {
 			for (let d of data) {
 				console.log(d.wiki);
-				await wikiBot.uploadImage(d.name, d.icon);
-				await wikiBot.uploadImage("Hamster_" + d.name, iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
+				await wikiBot.uploadImage(d.id, d.icon);
+				await wikiBot.uploadImage("hamster_" + d.id, iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
 				await wikiBot.createItemPage(d);
 				await sleep(interval);
 			}
@@ -362,7 +362,7 @@ async function initWikiBot() {
 		actionId: "wiki-critters", watcherId: "critters",
 		cb: async (data, action) => {
 			for (let d of data) {
-				await wikiBot.uploadImage(d.name, iTrackBC.bcmcAPI.gear + d.id + ".png");
+				await wikiBot.uploadImage(d.id, iTrackBC.bcmcAPI.gear + d.id + ".png");
 				await wikiBot.createCritterPage(d);
 				await sleep(interval);
 			}
