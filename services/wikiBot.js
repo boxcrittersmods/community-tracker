@@ -30,7 +30,7 @@ const
 |theme = ${toTitle(item.theme || "none")}
 |item_id = ${item.id}
 }}
-'''${item.name}''' is a [[${toTitle(item.slot)} Items|${item.slot.toLowerCase()}_item]] in ''[[Box Critters]]''.
+'''${item.name}''' is a [[${toTitle(item.slot)} Item|${item.slot.toLowerCase()} item]] in ''[[Box Critters]]''.
 
 ==History==
 {{History}}
@@ -42,7 +42,9 @@ const
 ==Gallery==
 ===Artwork===
 ===In Game Appearances===
-
+<gallery captionalign="center">
+Hamster ${item.id}.png|As seen in-game.
+</gallery>
 
 ==References==
 <references />
