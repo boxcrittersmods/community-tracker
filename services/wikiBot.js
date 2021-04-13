@@ -11,7 +11,7 @@ const { toTitle } = require('../util/util'),
             freeItem: "Template:CurrentFreeItem/name"
         }, templates: {
             format: "MMMM D, YYYY",
-            history: ({ info, from, too })
+            history: ({ info, from, too }) =>
                 `|-
 |${info}
 |${moment(from).format(this.format)}
