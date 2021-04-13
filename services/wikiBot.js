@@ -1,6 +1,9 @@
-const { toTitle } = require('../util/util'),
+const
     path = require("path"),
+    moment = require('moment'),
     { mwn } = require('mwn'),
+    imageDownloader = require('node-image-downloader'),
+    { toTitle } = require('../util/util'),
     wikiInfo = {
         categories: {
             room: "Room",
@@ -8,28 +11,30 @@ const { toTitle } = require('../util/util'),
             critter: "Critter"
         },
         pages: {
-            freeItem: "Template:CurrentFreeItem/name"
+            prefix: "",//"User:Boxcritterswiki-bot/Sandbox/testwiki2/",
+            freeItem: "Template:CurrentFreeItem/name",
+            history: "/history"
         }, templates: {
             format: "MMMM D, YYYY",
-            history: ({ info, from, too }) =>
+            history: ({ info, from, to }) =>
                 `|-
 |${info}
 |${moment(from).format(this.format)}
-|${moment(to).format(this.format)}`,
+|${to ? moment(to).format(this.format) : "''Still available''"}`,
             item: (item) =>
                 `{{CreatedByBot}}
 {{ItemInfobox
 |image1 = ${item.name.replace(" ", "_")}.png
 |available = No
 |type = ${toTitle(item.slot)} Item
-|theme = ${toTitle(item.theme)}
+|theme = ${toTitle(item.theme || "none")}
 |item_id = ${item.id}
 }}
 '''${item.name}''' is a [[${toTitle(item.slot)} Items|${item.slot.toLowerCase()}_item]] in ''[[Box Critters]]''.
 
 ==History==
 {{History}}
-{{/history}}
+{{${wikiInfo.pages.history}}}
 |}
 
 ==Trivia==
@@ -96,41 +101,67 @@ const { toTitle } = require('../util/util'),
     });
 
 bot.setOptions({
-    silent: false, // suppress messages (except error messages)
+    //silent: false, // suppress messages (except error messages)
     retryPause: 5000, // pause for 5000 milliseconds (5 seconds) on maxlag error.
     maxRetries: 3, // attempt to retry a failing requests upto 3 times
     exclusionRegex: /\{\{nobots\}\}/i,
 });
 
 async function login() {
-    return await bot.login();
+    await bot.login();
+    bot.enableEmergencyShutoff({
+        page: 'User:Boxcritterswiki-bot/status',  	// The name of the page to check 
+        intervalDuration: 1000, 			// check shutoff page every 5 seconds
+        condition: async function (pagetext) {		// function to determine whether the bot should continue to run or not
+            if (pagetext !== 'running') {
+                return false;				// other than "running", let's decide to stop!
+            } else return true;
+        },
+        onShutoff: function (pagetext) { 	// function to trigger when shutoff is activated
+            process.exit();			// let's just exit, though we could also terminate 
+        }									// any open connections, close files, etc.
+    });
 }
-bot.enableEmergencyShutoff({
-    page: 'User:Boxcritterswiki-bot/status',  	// The name of the page to check 
-    intervalDuration: 5000, 			// check shutoff page every 5 seconds
-    condition: async function (pagetext) {		// function to determine whether the bot should continue to run or not
-        if (pagetext !== 'running') {
-            return false;				// other than "running", let's decide to stop!
-        } else return true;
-    },
-    onShutoff: function (pagetext) { 	// function to trigger when shutoff is activated
-        process.exit();			// let's just exit, though we could also terminate 
-    }									// any open connections, close files, etc.
-});
+
 
 function getWikiPageName(bcObj) {
     return bcObj.wiki ? path.basename(bcObj.wiki) : bcObj.name || bcObj.id;
 }
 
 async function createPage(title, content) {
-    title = "User:Boxcritterswiki-bot/Sandbox/" + title;
-    await bot.create(title, content, "[BOT] Created a new page");
+    title = wikiInfo.pages.prefix + title;
+    try {
+        await bot.create(title, content, "[BOT] Created a new page");
+        console.log(`Created Page: "${title}"`);
+    } catch (e) { }
 }
 
 async function editPage(title, contentCB) {
-    await bot.edit(title, contentCB, /* editConfig */ {
-        exclusionRegex: /\{\{nobots\}\}/i
-    });
+    title = wikiInfo.pages.prefix + title;
+    try {
+        await bot.edit(title, contentCB, /* editConfig */ {
+            exclusionRegex: /\{\{nobots\}\}/i
+        });
+        console.log(`Edited Page: "${title}"`);
+    } catch (e) { }
+}
+
+async function uploadImage(title, url) {
+    let filename = title;
+    try {
+        await imageDownloader({
+            imgs: [
+                {
+                    uri: url,
+                    filename: `${title}`
+                }
+            ],
+            dest: '/tmp', //destination folder
+        });
+        await bot.upload(`/tmp/${filename}.png`, title, "[BOT] Uploaded a new file");
+        console.log(`Uploaded File: "${title}"`);
+        // process.exit(0);
+    } catch (e) { /*console.log(e);*/ }
 }
 
 async function getCategoryPages(c) {
@@ -138,46 +169,58 @@ async function getCategoryPages(c) {
 }
 
 async function getItemPages() {
-    return getCategoryPages(wikiInfo.categories.item);
+    return await getCategoryPages(wikiInfo.categories.item);
 }
 
 async function getRoomPages() {
-    return getCategoryPages(wikiInfo.categories.room);
+    return await getCategoryPages(wikiInfo.categories.room);
 
 }
 
 async function getCritterPages() {
-    return getCategoryPages(wikiInfo.categories.critter);
+    return await getCategoryPages(wikiInfo.categories.critter);
 
 }
 
 async function updateFreeItem(item) {
-    editPage(wikiInfo.pages.freeItem, () => getWikiPageName(item));
+    await editPage(wikiInfo.pages.freeItem, () => getWikiPageName(item));
 }
 
 async function createItemPage(item) {
-    createPage(getWikiPageName(item), wikiInfo.templates.item(item));
+    await createPage(getWikiPageName(item), wikiInfo.templates.item(item));
+    //await createPage(getWikiPageName(item) + wikiInfo.pages.history, ``);
 }
 
 async function createCritterPage(critter) {
-    createPage(getWikiPageName(critter), wikiInfo.templates.critter(critter));
+    await createPage(getWikiPageName(critter), wikiInfo.templates.critter(critter));
 
 }
 
 async function createRoomPage(room) {
-    createPage(getWikiPageName(room), wikiInfo.templates.room(room));
+    await createPage(getWikiPageName(room), wikiInfo.templates.room(room));
+}
+
+async function addHistory(thing, info, from, to) {
+    await createPage(getWikiPageName(thing) + wikiInfo.pages.history, ``);
+    await editPage(getWikiPageName(thing) + wikiInfo.pages.history, c =>
+        `${c.content}
+${wikiInfo.templates.history({ info, from, to })}`
+    );
 }
 
 module.exports = {
     login,
     getWikiPageName,
     getCategoryPages,
+    createPage,
+    editPage,
+    uploadImage,
     getCritterPages,
     getItemPages,
     getRoomPages,
-    createPage,
     createCritterPage,
     createItemPage,
     createRoomPage,
+    addHistory,
     updateFreeItem
 };

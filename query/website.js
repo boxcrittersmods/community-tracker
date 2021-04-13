@@ -1,5 +1,6 @@
 const fetch = require('node-fetch'),
 	{ JSDOM } = require("jsdom");
+const { sleep } = require('../util/util');
 
 function Website(body) {
 	if (!new.target) return;
@@ -13,13 +14,19 @@ function Website(body) {
 
 Website.Connect = function (url, body, method = "GET") {
 	if (typeof body == "undefined") {
-		body = async () => await fetch(url);
+		body = async () => {
+			await sleep(iTrackBC.sleep);
+			return await fetch(url);
+		};
 	} else {
-		body = async () => await fetch(url, {
-			method,
-			body: JSON.stringify(body),
-			headers: { 'Content-Type': 'application/json' }
-		});
+		body = async () => {
+			await sleep(iTrackBC.sleep);
+			return await fetch(url, {
+				method,
+				body: JSON.stringify(body),
+				headers: { 'Content-Type': 'application/json' }
+			});
+		};
 	}
 	let website = new Website(body);
 	website.url = url;

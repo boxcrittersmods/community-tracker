@@ -7,8 +7,8 @@ const Discord = require("discord.js"),
 	{ getItem, getRoom } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
-	{ getCloseset } = iTrackBC.require("util/util"),
-	wikiBot = iTrackBC.require("./services/wikiBot"),
+	{ getCloseset, sleep } = iTrackBC.require('/util/util');
+wikiBot = iTrackBC.require("./services/wikiBot"),
 
 	settings = iTrackBC.require("data/settings"),
 
@@ -323,10 +323,63 @@ client.on('message', message => {
 });
 
 
-module.exports = client;;;
+module.exports = client;
 
 
 
 //WIKIBOT
 
-//watch("wiki-rooms", "rooms", (watcher, action) => action.cb());
+
+async function initWikiBot() {
+	await wikiBot.login();
+	interval = iTrackBC.sleep;
+	watch({
+		actionId: "wiki-rooms", watcherId: "rooms",
+		cb: async (data, action) => {
+			for (let d of data) {
+				await wikiBot.uploadImage(d.name, iTrackBC.bcmcAPI.roomPreview + "/static/" + d.id + ".png");
+				await wikiBot.createRoomPage(d);
+
+				await sleep(interval);
+			};
+			//console.log(data.map(d => d.wiki));
+		}, first: true
+	});
+	watch({
+		actionId: "wiki-items", watcherId: "items",
+		cb: async (data, action) => {
+			for (let d of data) {
+				console.log(d.wiki);
+				await wikiBot.uploadImage(d.name, d.icon);
+				await wikiBot.uploadImage(d.name + "Gear", iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
+				await wikiBot.createItemPage(d);
+				await sleep(interval);
+			}
+			//console.log(data.map(d => d.wiki));
+		}, first: true
+	});
+	watch({
+		actionId: "wiki-critters", watcherId: "critters",
+		cb: async (data, action) => {
+			for (let d of data) {
+				await wikiBot.uploadImage(d.name, iTrackBC.bcmcAPI.gear + d.id + ".png");
+				await wikiBot.createCritterPage(d);
+				await sleep(interval);
+			}
+			//console.log(data.map(d => d.wiki));
+		}, first: true
+	});
+
+	watch({
+		actionId: "wiki-history", watcherId: "codes",
+		cb: async (data, action) => {
+			//console.log(data);
+			for (let d of data) {
+				console.log(`==== ${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
+				await wikiBot.addHistory(d, `${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
+				await sleep(interval);
+			}
+		}
+	});
+}
+initWikiBot();

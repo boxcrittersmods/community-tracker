@@ -3,6 +3,7 @@ const path = require("path");
 var bcmcAPI = "https://api.bcmc.ga";
 
 var iTrackBC = {
+    sleep: 1,
     root: path.join(__dirname, ".."),
     require: (id) => require(path.join(iTrackBC.root, id)),
     token: {
@@ -33,6 +34,7 @@ var iTrackBC = {
         itemCodes: bcmcAPI + "/itemcodes",
         playerGear: bcmcAPI + "/player/",
         roomPreview: bcmcAPI + "/room/",
+        gear: bcmcAPI + "/gear/",
         staticRoomPreview: bcmcAPI + "/room/static/"
     }
 };

@@ -7,7 +7,7 @@ const
  */
 function getCloseset(array, value) {
 	let similarity = stringSimilarity.findBestMatch("_" + value.toLowerCase().replace(" ", "☺"), array.map(a => "_" + a.toLowerCase().replace(" ", "☺")));
-	console.log("Similarities of " + value, similarity.ratings);
+	//console.log(value + " is closest to:", array[similarity.bestMatchIndex]);
 	return {
 		value: array[similarity.bestMatchIndex],
 		rating: similarity.ratings[similarity.bestMatchIndex].rating,
@@ -18,4 +18,6 @@ function getCloseset(array, value) {
 function toTitle(str) { return str.toLowerCase().split(" ").map((e => e.charAt(0).toUpperCase() + e.slice(1))).join(" "); }
 
 
-module.exports = { getCloseset, toTitle };
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+module.exports = { getCloseset, toTitle, sleep };

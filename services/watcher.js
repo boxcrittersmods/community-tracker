@@ -4,9 +4,10 @@ const _ = require('lodash'),
 	Website = iTrackBC.require("query/website"),
 	{ lists, itemCodeList, getItem } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
-	{ getWatcherCache, cacheWatcher, files } = iTrackBC.require("data/watcherCache");
+	{ getWatcherCache, cacheWatcher, files } = iTrackBC.require("data/watcherCache"),
+	{ sleep } = iTrackBC.require('/util/util');
 
-interval = 120e3,
+interval = iTrackBC.sleep,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
 	send = async (channel, data) => Array.isArray(data) ? data.forEach(async d => await sendOne(channel, d)) : await sendOne(channel, data),
 	createWatcher = (id, {
@@ -48,7 +49,8 @@ interval = 120e3,
 							dateReleased: code.dateReleased,
 							notes: code.notes,
 							cost: code.source == "shop" ? item.cost : null,
-							code: "`" + code.code + "`"
+							code: "`" + code.code + "`",
+							wiki: item.wiki
 						};
 					}
 				))
@@ -67,7 +69,6 @@ interval = 120e3,
 		})
 	];
 
-function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 async function createMessage(watcher, force) {
 	let now = await watcher.query(),
@@ -75,7 +76,7 @@ async function createMessage(watcher, force) {
 	void 0 == last && (last = new now.constructor);
 	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
-	console.log({ now, last, diff, data });
+	//console.log({ now, last, diff, data });
 	cacheWatcher(watcher.id, now);
 	watcher.last = now;
 	return data;
@@ -93,15 +94,16 @@ async function tick() {
 			let data = await createMessage(watcher);
 			if (void 0 != data && Array.isArray(data) ? data.length > 0 : 1)
 				for (let action of watcher.actions) {
-					action.cb(data, action);
+					await action.cb(data, action);
+					await sleep(action.interval || watcher.interval || interval);
 				}
-			await sleep(interval);
+			await sleep(watcher.interval || interval);
 		}
 	}
-	setTimeout(tick, 0);
+	setTimeout(tick, interval);
 }
 
-setTimeout(tick, 0);
+setTimeout(tick, interval);
 
 function diffStr(str1, str2) {
 	let diff = "";
@@ -118,7 +120,7 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch(actionId, watcherId, first, cb) {
+async function watch({ actionId, watcherId, cb, first, interval }) {
 	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
@@ -130,13 +132,14 @@ async function watch(actionId, watcherId, first, cb) {
 	void 0 === action && (
 		action = {
 			id: actionId,
-			cb
+			cb, interval
 		},
 		watcher.actions.push(action)
 	);
 	if (void 0 == first) {
-		setupInitialLastValue(watcher);
+		await setupInitialLastValue(watcher);
 	} else {
+		if (typeof first != "function") first = cb;
 		await first(await createMessage(watcher, true), action, watcher);
 	}
 	return action;
@@ -153,11 +156,11 @@ async function watchDiscord(discordChannel, url, mention, first) {
 			discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
 			//let data = await createMessage(watcher, true);
 			console.log("data", data);
-			send(action, data);
+			await cb(action, data);
 		};
 	}
 
-	let action = watch(discordChannel.id, url, first, cb);
+	let action = watch({ actionId: discordChannel.id, watcherId: url, first, cb });
 	action.mention = mention;
 	action.discord = discordChannel;
 
@@ -165,7 +168,7 @@ async function watchDiscord(discordChannel, url, mention, first) {
 
 function clearWatcher(id) {
 	for (let watcher of watchers) {
-		console.log(`looking for ${id} in ${watcher.id} watcher`);
+		//console.log(`looking for ${id} in ${watcher.id} watcher`);
 		watcher.actions = watcher.actions.filter(a => a.id != id);
 	}
 }

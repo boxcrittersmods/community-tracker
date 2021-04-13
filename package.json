@@ -27,6 +27,7 @@
 		"mongodb": "^3.6.2",
 		"mwn": "^0.10.4",
 		"node-fetch": "^2.6.1",
+		"node-image-downloader": "^1.0.7",
 		"path": "^0.12.7",
 		"string-similarity": "^4.0.2"
 	},
