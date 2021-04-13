@@ -119,11 +119,11 @@ async function setupInitialLastValue(watcher) {
 }
 
 async function watch(actionId, watcherId, first, cb) {
-	clearWatcher(sid);
+	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
-		if (!wid.startsWith("http")) throw "Invalid URL or watcher preset. " + watcherId;
-		watcher = createWatcher(wid, {}),
+		if (!watcherId.startsWith("http")) throw "Invalid URL or watcher preset. " + watcherId;
+		watcher = createWatcher(watcherId, {}),
 			watchers.push(watcher);
 	}
 	let action = watcher.actions.find(t => t.id == action);
