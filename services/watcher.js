@@ -126,7 +126,7 @@ async function watch(actionId, watcherId, first, cb) {
 		watcher = createWatcher(watcherId, {}),
 			watchers.push(watcher);
 	}
-	let action = watcher.actions.find(t => t.id == action);
+	let action = watcher.actions.find(t => t.id == actionId);
 	void 0 === action && (
 		action = {
 			id: actionId,
