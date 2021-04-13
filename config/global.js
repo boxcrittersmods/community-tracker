@@ -3,7 +3,7 @@ const path = require("path");
 var bcmcAPI = "https://api.bcmc.ga";
 
 var iTrackBC = {
-    sleep: 1,
+    sleep: 10e3,
     root: path.join(__dirname, ".."),
     require: (id) => require(path.join(iTrackBC.root, id)),
     token: {
