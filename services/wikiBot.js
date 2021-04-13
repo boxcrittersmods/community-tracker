@@ -22,7 +22,7 @@ const
 |${moment(from).format(this.format)}
 |${to ? moment(to).format(this.format) : "''Still available''"}`,
             item: (item) =>
-                `{{CreatedByBot}}
+                `{{stub}}
 {{ItemInfobox
 |image1 = ${item.name.replace(" ", "_")}.png
 |available = No
@@ -48,7 +48,7 @@ const
 <references />
 `,
             critter: (critter) =>
-                `{{CreatedByBot}}
+                `{{stub}}
 {{CritterInfobox
 |image1 = ${critter.name.replace(" ", "_")}.png
 |trait = Unknown
@@ -67,7 +67,7 @@ const
 ==References==
 <references />`,
             room: room =>
-                `{{CreatedByBot}}
+                `{{stub}}
 {{RoomInfobox
 |image1=${room.name.replace(" ", "_")}.png
 |where=Somewhere.
