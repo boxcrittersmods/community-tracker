@@ -137,7 +137,7 @@ async function watch(actionId, watcherId, first, cb) {
 	if (void 0 == first) {
 		setupInitialLastValue(watcher);
 	} else {
-		await first(watcher, action);
+		await first(await createMessage(watcher, true)action, watcher);
 	}
 	return action;
 }
@@ -148,7 +148,7 @@ async function watchDiscord(discordChannel, url, mention, first) {
 		send(channel, data);
 	};
 	if (first) {
-		first = async (watcher, action) => {
+		first = async (data, action, watcher) => {
 			console.log("watcher", watcher);
 			discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
 			let data = await createMessage(watcher, true);

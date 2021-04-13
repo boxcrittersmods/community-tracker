@@ -12,7 +12,7 @@ const Discord = require("discord.js"),
 
 	settings = iTrackBC.require("data/settings"),
 
-	client = new Discord.Client, ;
+	client = new Discord.Client;
 
 
 
@@ -329,4 +329,4 @@ module.exports = client;;;
 
 //WIKIBOT
 
-//watch("wiki-rooms", "rooms", true);
+watch("wiki-rooms", "rooms", (watcher, action) => action.cb());
