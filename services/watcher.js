@@ -130,7 +130,6 @@ async function watch(actionId, watcherId, first, cb) {
 	void 0 === action && (
 		action = {
 			id: actionId,
-			mention: mention,
 			cb
 		},
 		watcher.actions.push(action)
