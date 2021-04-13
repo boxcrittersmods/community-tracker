@@ -137,7 +137,7 @@ async function watch(actionId, watcherId, first, cb) {
 	if (void 0 == first) {
 		setupInitialLastValue(watcher);
 	} else {
-		await first(await createMessage(watcher, true)action, watcher);
+		await first(await createMessage(watcher, true), action, watcher);
 	}
 	return action;
 }
