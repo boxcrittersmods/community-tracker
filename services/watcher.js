@@ -13,7 +13,7 @@ interval = 120e3,
 		query = async () => await Website.Connect(id).getJson(),
 		equality = _.isEqual,
 		createMessage = async (diff, last, now) => diff
-	}) => ({ id, query, equality, createMessage, channels: [] }),
+	}) => ({ id, query, equality, createMessage, actions: [], get channels() { return this.actions; } }),
 	watchers = [
 		createWatcher("rooms", {
 			query: async () => await lists.rooms.getJson(),
@@ -81,19 +81,19 @@ async function createMessage(watcher, force) {
 	return data;
 }
 
+
 async function tick() {
-	if (watchers.length == 0 || watchers.reduce((s, w) => s + w.channels.length, 0) == 0) {
+	if (watchers.length == 0 || watchers.reduce((s, w) => s + w.actions.length, 0) == 0) {
 		await sleep(interval);
 	} else {
 		console.log("WATCHER TICK");
 		for (let watcher of watchers) {
-			if (0 == watcher.channels.length) continue;
+			if (0 == watcher.actions.length) continue;
 			console.log("Updateing watcher " + watcher.id);
 			let data = await createMessage(watcher);
 			if (void 0 != data && Array.isArray(data) ? data.length > 0 : 1)
-				for (let channel of watcher.channels) {
-					console.log(`Sending updates to ${channel.discord.name} in ${channel.discord.guild.name}`);
-					send(channel, data);
+				for (let action of watcher.actions) {
+					action.cb(data, action);
 				}
 			await sleep(interval);
 		}
@@ -118,40 +118,57 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch(discordChannel, url, mention, first) {
-	clearWatcher(discordChannel);
-	console.log(arguments);
-	let watcher = watchers.find(e => e.id == url);
+async function watch(actionId, watcherId, first, cb) {
+	clearWatcher(sid);
+	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
-		if (!url.startsWith("http")) throw "Invalid URL or watcher preset. " + url;
-		watcher = createWatcher(url, {}),
+		if (!wid.startsWith("http")) throw "Invalid URL or watcher preset. " + watcherId;
+		watcher = createWatcher(wid, {}),
 			watchers.push(watcher);
 	}
-	let channel = watcher.channels.find(t => t.id == discordChannel.id);
-	void 0 === channel && (
-		channel = {
-			id: discordChannel.id,
-			discord: discordChannel,
-			mention: mention
+	let action = watcher.actions.find(t => t.id == action);
+	void 0 === action && (
+		action = {
+			id: actionId,
+			mention: mention,
+			cb
 		},
-		watcher.channels.push(channel)
+		watcher.actions.push(action)
 	);
 	if (void 0 == first) {
 		setupInitialLastValue(watcher);
 	} else {
-		console.log("watcher", watcher);
-		discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
-		let data = await createMessage(watcher, true);
-		console.log("data", data);
+		first();
+	}
+	return action;
+}
+
+async function watchDiscord(discordChannel, url, mention, first) {
+	if (first) {
+		first = () => {
+			console.log("watcher", watcher);
+			discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
+			let data = await createMessage(watcher, true);
+			console.log("data", data);
+			send(subscription, data);
+		};
+	}
+
+	let cb = (data, { channel }) => {
+		console.log(`Sending updates to ${channel.discord.name} in ${channel.discord.guild.name}`);
 		send(channel, data);
-	}
+	};
+	let action = watch(discordChannel.id, url, first, cb);
+	action.mention = mention;
+	action.discord = discordChannel;
+
 }
 
-function clearWatcher(discordChannel) {
+function clearWatcher(id) {
 	for (let watcher of watchers) {
-		console.log(`looking for ${discordChannel.id} in ${watcher.id} watcher`);
-		watcher.channels = watcher.channels.filter(c => c.id != discordChannel.id);
+		console.log(`looking for ${id} in ${watcher.id} watcher`);
+		watcher.actions = watcher.actions.filter(a => a.id != id);
 	}
 }
 
-module.exports = { watchers, watch, clearWatcher };
+module.exports = { watchers, watch, watchDiscord, clearWatcher };

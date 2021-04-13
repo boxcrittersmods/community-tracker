@@ -3,7 +3,7 @@ const { getCritter } = require("../query/manifests");
 const Discord = require("discord.js"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
-	{ watch, clearWatcher, watchers } = require("./watcher"),
+	{ watch, clearWatcher, watchers, watchDiscord } = require("./watcher"),
 	{ getItem, getRoom } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
@@ -26,7 +26,7 @@ client.on("ready", async () => {
 		let guildSettings = await settings.get(guild.id);
 		let getChannel = id => guild.channels.cache.get(id);
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
-			watcher => watch(getChannel(watcher.channel), watcher.url, watcher.mention)
+			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
 		);
 	});
 });
@@ -224,7 +224,7 @@ let commands = {
 				return;
 			}
 			if (url == "types") {
-				message.channel.send("```" + watchers.map(w => `${w.id} (${w.channels.length} watchers)`).join("\n") + "```");
+				message.channel.send("```" + watchers.map(w => `${w.id} (${w.actions.length} watchers)`).join("\n") + "```");
 				return;
 			} else if (url == "clear") {
 				currentSettings.watchers = currentSettings.watchers.filter(w => w.channel != message.channel.id);
@@ -238,7 +238,7 @@ let commands = {
 					channel: message.channel.id
 				};
 				try {
-					await watch(message.channel, url, mention, first);
+					await watchDiscord(message.channel, url, mention, first);
 					discordChannel.send(`Watching ${watcher.id} in ${message.channel}.`).then(e => setTimeout(() => e.delete(), 10e3));
 				} catch (error) {
 					console.error(error);
