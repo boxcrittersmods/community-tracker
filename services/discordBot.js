@@ -329,4 +329,4 @@ module.exports = client;;;
 
 //WIKIBOT
 
-watch("wiki-rooms", "rooms", (watcher, action) => action.cb());
+//watch("wiki-rooms", "rooms", (watcher, action) => action.cb());
