@@ -170,6 +170,7 @@ async function createRoomPage(room) {
 
 module.exports = {
     login,
+    getWikiPageName,
     getCategoryPages,
     getCritterPages,
     getItemPages,
