@@ -351,7 +351,7 @@ async function initWikiBot() {
 			for (let d of data) {
 				console.log(d.wiki);
 				await wikiBot.uploadImage(d.name, d.icon);
-				await wikiBot.uploadImage(d.name + "Gear", iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
+				await wikiBot.uploadImage("Hamster_" + d.name, iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
 				await wikiBot.createItemPage(d);
 				await sleep(interval);
 			}
