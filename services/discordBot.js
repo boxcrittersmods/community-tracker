@@ -8,10 +8,13 @@ const Discord = require("discord.js"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
 	{ getCloseset } = iTrackBC.require("util/util"),
+	wikiBot = iTrackBC.require("./services/wikiBot"),
 
 	settings = iTrackBC.require("data/settings"),
 
-	client = new Discord.Client;
+	client = new Discord.Client, ;
+
+
 
 function mapAsync(array, func, context) {
 	return Promise.all(array.map(func, context));
@@ -321,3 +324,9 @@ client.on('message', message => {
 
 
 module.exports = client;;;
+
+
+
+//WIKIBOT
+
+//watch("wiki-rooms", "rooms", true);
