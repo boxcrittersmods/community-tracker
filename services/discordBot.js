@@ -350,7 +350,7 @@ async function initWikiBot() {
 				console.log(d.wiki);
 				await wikiBot.uploadImage(d.id, d.icon);
 				let critters = await lists.critters.getJson();
-				for (let c of critters) await wikiBot.uploadImage(c.id + "_" + d.id, iTrackBC.bcmcAPI.gear + c.id + ".png?" + d.id);
+				for (let c of critters) if (c.type != "mascot") await wikiBot.uploadImage(c.id + "_" + d.id, iTrackBC.bcmcAPI.gear + c.id + ".png?" + d.id);
 				await wikiBot.createItemPage(d);
 				await sleep(interval);
 			}
