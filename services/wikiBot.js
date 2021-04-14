@@ -24,7 +24,7 @@ const
 |${info}
 |${moment(from).format(this.format)}
 |${to ? moment(to).format(this.format) : "''Still available''"}`,
-            item: (item) =>
+            item: async (item) =>
                 `{{stub}}
 {{ItemInfobox
 |image1 = ${item.id}.png
@@ -47,7 +47,7 @@ const
 ===Artwork===
 ===In Game Appearances===
 <gallery captionalign="center">
-${forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
+${await forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
 `)}</gallery>
 
 ==References==
@@ -190,17 +190,17 @@ async function getCritterPages() {
 
 
 async function createItemPage(item) {
-    await createPage(getWikiPageName(item), wikiInfo.templates.item(item));
+    await createPage(getWikiPageName(item), await wikiInfo.templates.item(item));
     //await createPage(getWikiPageName(item) + wikiInfo.pages.history, ``);
 }
 
 async function createCritterPage(critter) {
-    await createPage(getWikiPageName(critter), wikiInfo.templates.critter(critter));
+    await createPage(getWikiPageName(critter), await wikiInfo.templates.critter(critter));
 
 }
 
 async function createRoomPage(room) {
-    await createPage(getWikiPageName(room), wikiInfo.templates.room(room));
+    await createPage(getWikiPageName(room), await wikiInfo.templates.room(room));
 }
 
 async function addHistory(thing, info, from, to) {
@@ -215,7 +215,7 @@ async function updateFreeItem(item) {
     await editPage(wikiInfo.pages.freeItemId, () => item.id);
 }
 
-function forEachCritter(cb) {
+async function forEachCritter(cb) {
     let critters = await lists.critters.getJson();
     for (let c of critters) cb(c);
 }
