@@ -26,6 +26,7 @@ const
 {{ItemInfobox
 |image1 = ${item.id}.png
 |available = No
+|cost = {{Coins}} ${item.cost}
 |type = ${toTitle(item.slot)} Item
 |theme = ${toTitle(item.theme || "none")}
 |item_id = ${item.id}
