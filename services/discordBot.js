@@ -4,11 +4,11 @@ const Discord = require("discord.js"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
 	{ watch, clearWatcher, watchers, watchDiscord } = require("./watcher"),
-	{ getItem, getRoom } = iTrackBC.require("query/manifests"),
+	{ getItem, getRoom, getCritter, lists } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
-	{ getCloseset, sleep } = iTrackBC.require('/util/util');
-wikiBot = iTrackBC.require("./services/wikiBot"),
+	{ getCloseset, sleep } = iTrackBC.require('/util/util'),
+	wikiBot = iTrackBC.require("./services/wikiBot"),
 
 	settings = iTrackBC.require("data/settings"),
 
@@ -351,7 +351,8 @@ async function initWikiBot() {
 			for (let d of data) {
 				console.log(d.wiki);
 				await wikiBot.uploadImage(d.id, d.icon);
-				await wikiBot.uploadImage("hamster_" + d.id, iTrackBC.bcmcAPI.gear + "hamster.png?" + d.id);
+				let critters = await lists.critters.getJson();
+				for (let c of critters) await wikiBot.uploadImage(c.id + "_" + d.id, iTrackBC.bcmcAPI.gear + c.id + ".png?" + d.id);
 				await wikiBot.createItemPage(d);
 				await sleep(interval);
 			}
@@ -377,6 +378,9 @@ async function initWikiBot() {
 			for (let d of data) {
 				console.log(`==== ${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
 				await wikiBot.addHistory(d, `${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
+
+				if (d.code == "/freeitem") wikiBot.updateFreeItem(d);
+
 				await sleep(interval);
 			}
 		}

@@ -3,7 +3,9 @@ const
     moment = require('moment'),
     { mwn } = require('mwn'),
     imageDownloader = require('node-image-downloader'),
-    { toTitle } = require('../util/util'),
+    { toTitle } = iTrackBC.require('util/util'),
+    { lists } = iTrackBC.require("query/manifests"),
+
     wikiInfo = {
         categories: {
             room: "Room",
@@ -12,7 +14,8 @@ const
         },
         pages: {
             prefix: "",//"User:Boxcritterswiki-bot/Sandbox/testwiki2/",
-            freeItem: "Template:CurrentFreeItem/name",
+            freeItemName: "Template:CurrentFreeItem/name",
+            freeItemId: "Template:CurrentFreeItem/id",
             history: "/history"
         }, templates: {
             format: "MMMM D, YYYY",
@@ -44,8 +47,8 @@ const
 ===Artwork===
 ===In Game Appearances===
 <gallery captionalign="center">
-Hamster ${item.id}.png|As seen in-game.
-</gallery>
+${forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
+`)}</gallery>
 
 ==References==
 <references />
@@ -185,9 +188,6 @@ async function getCritterPages() {
 
 }
 
-async function updateFreeItem(item) {
-    await editPage(wikiInfo.pages.freeItem, () => getWikiPageName(item));
-}
 
 async function createItemPage(item) {
     await createPage(getWikiPageName(item), wikiInfo.templates.item(item));
@@ -209,6 +209,15 @@ async function addHistory(thing, info, from, to) {
         `${c.content}
 ${wikiInfo.templates.history({ info, from, to })}`
     );
+}
+async function updateFreeItem(item) {
+    await editPage(wikiInfo.pages.freeItemName, () => getWikiPageName(item));
+    await editPage(wikiInfo.pages.freeItemId, () => item.id);
+}
+
+function forEachCritter(cb) {
+    let critters = await lists.critters.getJson();
+    for (let c of critters) cb(c);
 }
 
 module.exports = {
