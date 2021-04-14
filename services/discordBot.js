@@ -1,5 +1,3 @@
-const { getCritter } = require("../query/manifests");
-
 const Discord = require("discord.js"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
