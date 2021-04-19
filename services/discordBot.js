@@ -374,14 +374,17 @@ async function initWikiBot() {
 		cb: async (data, action) => {
 			//console.log(data);
 			for (let d of data) {
-				console.log(`==== ${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
+				d.code = d.code.split("`").join("");
+				console.log(`==== ${d.code || ""} - ${d.notes || ""}  ${d.dateReleased || ""} ${d.dateExpired || ""}`);
+
+				if (d.source === 'shop') d.code = "[[Shop]]";
+				if (d.code === '/freeitem') await wikiBot.updateFreeItem(d);
+
 				await wikiBot.addHistory(d, `${d.code}${d.notes ? " - " + d.notes : ""}`, d.dateReleased, d.dateExpired);
-				if (d.source == "shop") d.code = "[[Shop]]";
-				if (d.code == "/freeitem") wikiBot.updateFreeItem(d);
 
 				await sleep(interval);
 			}
 		}
 	});
 }
-initWikiBot();
+initWikiBot();;;

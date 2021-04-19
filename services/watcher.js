@@ -42,6 +42,7 @@ interval = iTrackBC.sleep,
 					async code => {
 						let item = await getItem(code.name);
 						return {
+							id: item.itemId,
 							itemId: item.itemId,
 							name: item.name,
 							icon: item.icon,
@@ -77,7 +78,7 @@ async function createMessage(watcher, force) {
 	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
 	//console.log({ now, last, diff, data });
-	cacheWatcher(watcher.id, now);
+	//cacheWatcher(watcher.id, now);
 	watcher.last = now;
 	return data;
 }
@@ -94,6 +95,7 @@ async function tick() {
 			let data = await createMessage(watcher);
 			if (void 0 != data && Array.isArray(data) ? data.length > 0 : 1)
 				for (let action of watcher.actions) {
+					console.log(data);
 					await action.cb(data, action);
 					await sleep(action.interval || watcher.interval || interval);
 				}

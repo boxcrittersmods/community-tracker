@@ -149,12 +149,12 @@ async function createPage(title, content) {
 
 async function editPage(title, contentCB) {
     title = wikiInfo.pages.prefix + title;
-    try {
-        await bot.edit(title, contentCB, /* editConfig */ {
-            exclusionRegex: /\{\{nobots\}\}/i
-        });
-        console.log(`Edited Page: "${title}"`);
-    } catch (e) { }
+    //try {
+    await bot.edit(title, contentCB, {
+        exclusionRegex: /\{\{nobots\}\}/i
+    });
+    console.log(`Edited Page: "${title}"`);
+    // } catch (e) { console.log(e); }
 }
 
 async function uploadImage(title, url) {
