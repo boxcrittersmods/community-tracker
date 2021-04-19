@@ -18,12 +18,17 @@ const
             freeItemId: "Template:CurrentFreeItem/id",
             history: "/history"
         }, templates: {
+
+            table: {
+                column: "|",
+                row: "|-"
+            },
             format: "MMMM D, YYYY",
             history: ({ info, from, to }) =>
-                `|-
-|${info}
-|${moment(from).format(this.format)}
-|${to ? moment(to).format(this.format) : "''Still available''"}`,
+                this.table.row
+                    + info ? this.table.column + info : ""
+                        + from ? this.table.column + moment(from).format(this.format) : ":"
+                            + to ? this.table.column + moment(to).format(this.format) : "''Still available''",
             item: async (item) =>
                 `{{stub}}
 {{ItemInfobox
@@ -204,11 +209,14 @@ async function createRoomPage(room) {
 }
 
 async function addHistory(thing, info, from, to) {
-    await createPage(getWikiPageName(thing) + wikiInfo.pages.history, ``);
-    await editPage(getWikiPageName(thing) + wikiInfo.pages.history, c =>
-        `${c.content}
+    try {
+        await createPage(getWikiPageName(thing) + wikiInfo.pages.history, wikiInfo.templates.history({ info, from, to }));
+    } catch (e) {
+        await editPage(getWikiPageName(thing) + wikiInfo.pages.history, c =>
+            `${c.content}
 ${wikiInfo.templates.history({ info, from, to })}`
-    );
+        );
+    }
 }
 async function updateFreeItem(item) {
     await editPage(wikiInfo.pages.freeItemName, () => getWikiPageName(item));

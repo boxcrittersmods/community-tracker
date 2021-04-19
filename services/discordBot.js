@@ -375,8 +375,8 @@ async function initWikiBot() {
 			//console.log(data);
 			for (let d of data) {
 				console.log(`==== ${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
-				await wikiBot.addHistory(d, `${d.code} - ${d.notes}`, d.dateReleased, d.dateExpired);
-
+				await wikiBot.addHistory(d, `${d.code}${d.notes ? " - " + d.notes : ""}`, d.dateReleased, d.dateExpired);
+				if (d.source == "shop") d.code = "[[Shop]]";
 				if (d.code == "/freeitem") wikiBot.updateFreeItem(d);
 
 				await sleep(interval);
