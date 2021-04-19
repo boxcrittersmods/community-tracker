@@ -18,17 +18,12 @@ const
             freeItemId: "Template:CurrentFreeItem/id",
             history: "/history"
         }, templates: {
-
-            table: {
-                column: "|",
-                row: "|-"
-            },
             format: "MMMM D, YYYY",
             history: ({ info, from, to }) =>
-                this.table.row
-                    + info ? this.table.column + info : ""
-                        + from ? this.table.column + moment(from).format(this.format) : ":"
-                            + to ? this.table.column + moment(to).format(this.format) : "''Still available''",
+                "|" +
+                    + info ? "|" + info : ""
+                        + from ? "|" + moment(from).format(this.format) : ":"
+                            + to ? "|" + moment(to).format(this.format) : "''Still available''",
             item: async (item) =>
                 `{{stub}}
 {{ItemInfobox
