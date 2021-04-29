@@ -122,7 +122,7 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch({ actionId, watcherId, cb, first, interval, options: { } }) {
+async function watch({ actionId, watcherId, cb, first, interval, options = {} }) {
 	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
