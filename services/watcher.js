@@ -149,6 +149,8 @@ async function watch({ actionId, watcherId, cb, first, interval }) {
 
 async function watchDiscord(discordChannel, url, mention, first) {
 	let cb = (data, channel) => {
+		console.log("Channel", Object.keys(channel));
+		console.log("data", Object.keys(data));
 		console.log(`Sending updates to ${channel.discord.name} in ${channel.discord.guild.name}`);
 		send(channel, data);
 	};
