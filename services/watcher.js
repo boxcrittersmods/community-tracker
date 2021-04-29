@@ -122,7 +122,7 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch({ actionId, watcherId, cb, first, interval, action: { } }) {
+async function watch({ actionId, watcherId, cb, first, interval, options: { } }) {
 	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
@@ -132,7 +132,7 @@ async function watch({ actionId, watcherId, cb, first, interval, action: { } }) 
 	}
 	let action = watcher.actions.find(t => t.id == actionId);
 	void 0 === action && (
-		action = Object.assign(action, {
+		action = Object.assign(options, {
 			id: actionId,
 			cb, interval
 		}),
@@ -163,7 +163,7 @@ async function watchDiscord(discordChannel, url, mention, first) {
 	}
 	let action = watch({
 		actionId: discordChannel.id, watcherId: url, first, cb,
-		action: {
+		options: {
 			mention, discord: discordChannel
 		}
 	});
