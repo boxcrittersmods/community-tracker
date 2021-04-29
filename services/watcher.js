@@ -122,7 +122,7 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch({ actionId, watcherId, cb, first, interval, acton: { } }) {
+async function watch({ actionId, watcherId, cb, first, interval, action: { } }) {
 	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
@@ -156,7 +156,7 @@ async function watchDiscord(discordChannel, url, mention, first) {
 		first = async (data, action, watcher) => {
 			console.log("watcher", watcher);
 			discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
-			//let data = await createMessage(watcher, true);
+			let data = await createMessage(watcher, true);
 			console.log("data", data);
 			await cb(action, data);
 		};
