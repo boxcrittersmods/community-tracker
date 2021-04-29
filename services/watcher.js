@@ -122,7 +122,7 @@ async function setupInitialLastValue(watcher) {
 	watcher.last = data;
 }
 
-async function watch({ actionId, watcherId, cb, first, interval }) {
+async function watch({ actionId, watcherId, cb, first, interval, acton: { } }) {
 	clearWatcher(actionId);
 	let watcher = watchers.find(e => e.id == watcherId);
 	if (void 0 === watcher) {
@@ -132,10 +132,10 @@ async function watch({ actionId, watcherId, cb, first, interval }) {
 	}
 	let action = watcher.actions.find(t => t.id == actionId);
 	void 0 === action && (
-		action = {
+		action = Object.assign(action, {
 			id: actionId,
 			cb, interval
-		},
+		}),
 		watcher.actions.push(action)
 	);
 	if (void 0 == first) {
@@ -149,9 +149,6 @@ async function watch({ actionId, watcherId, cb, first, interval }) {
 
 async function watchDiscord(discordChannel, url, mention, first) {
 	let cb = (data, channel) => {
-		console.log("Channel", Object.keys(channel));
-		console.log("Channel.cb", Object.keys(channel.cb));
-		console.log("data", Object.keys(data));
 		console.log(`Sending updates to ${channel.discord.name} in ${channel.discord.guild.name}`);
 		send(channel, data);
 	};
@@ -164,10 +161,12 @@ async function watchDiscord(discordChannel, url, mention, first) {
 			await cb(action, data);
 		};
 	}
-
-	let action = watch({ actionId: discordChannel.id, watcherId: url, first, cb });
-	action.mention = mention;
-	action.discord = discordChannel;
+	let action = watch({
+		actionId: discordChannel.id, watcherId: url, first, cb,
+		action: {
+			mention, discord: discordChannel
+		}
+	});
 
 }
 
