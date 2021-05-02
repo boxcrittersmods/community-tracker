@@ -40,7 +40,7 @@ Website.prototype.getJson = async function () {
 		let body = await this.body();
 		json = body.json();
 	} catch (error) {
-		console.error("Website Error: ", error);
+		//console.error("Website Error: ", error);
 		json = {};
 	}
 	return json;
