@@ -49,7 +49,7 @@ const
 ===In Game Appearances===
 <gallery captionalign="center">
 ${await forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
-`)}</gallery>
+`).join("")}</gallery>
 
 ==References==
 <references />
@@ -221,7 +221,9 @@ async function updateFreeItem(item) {
 
 async function forEachCritter(cb) {
     let critters = await lists.critters.getJson();
-    for (let c of critters) cb(c);
+    let o = [];
+    for (let c of critters) o.push(cb(c));
+    return o;
 }
 
 module.exports = {
