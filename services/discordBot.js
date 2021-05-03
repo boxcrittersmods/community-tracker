@@ -29,6 +29,18 @@ client.on("ready", async () => {
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
 			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
 		);
+
+		//Slash Commands
+
+		Object.keys(commands).forEach(async c => {
+			client.api.applications(client.user.id).guilds(guild.id).commands.post({
+				data: {
+					name: c,
+					description: await LANG(guild.id, "CMD_" + c.toUpperCase() + "_DESC")
+				}
+			});
+		});
+
 	});
 });
 
@@ -250,6 +262,9 @@ let commands = {
 		}
 	}
 };
+
+
+
 
 
 async function parseCommand(message) {
