@@ -192,7 +192,7 @@ async function getCritterPages() {
 
 async function createItemPage(item) {
     await createPage(getWikiPageName(item), await wikiInfo.templates.item(item));
-    //await createPage(getWikiPageName(item) + wikiInfo.pages.history, ``);
+    await createPage(getWikiPageName(item) + wikiInfo.pages.history, ``);
 }
 
 async function createCritterPage(critter) {
