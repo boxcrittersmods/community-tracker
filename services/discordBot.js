@@ -377,7 +377,7 @@ async function initWikiBot() {
 				d.code = d.code.split("`").join("");
 				console.log(`==== ${d.code || ""} - ${d.notes || ""}  ${d.dateReleased || ""} ${d.dateExpired || ""}`);
 
-				if (d.source === 'shop') d.code = "[[Shop]]";
+				if (d.source === 'shop') d.code = "Available in the [[Shop]]";
 				if (d.code === '/freeitem') await wikiBot.updateFreeItem(d);
 
 				await wikiBot.addHistory(d, `${d.code}${d.notes ? " - " + d.notes : ""}`, d.dateReleased, d.dateExpired);

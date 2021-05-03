@@ -20,4 +20,11 @@ function toTitle(str) { return str.toLowerCase().split(" ").map((e => e.charAt(0
 
 function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-module.exports = { getCloseset, toTitle, sleep };
+function getMonday(d) {
+	d = new Date(d);
+	var day = d.getDay(),
+		diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+	return new Date(d.setDate(diff));
+}
+
+module.exports = { getCloseset, toTitle, sleep, getMonday };

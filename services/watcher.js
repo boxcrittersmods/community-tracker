@@ -5,7 +5,7 @@ const _ = require('lodash'),
 	{ lists, itemCodeList, getItem } = iTrackBC.require("query/manifests"),
 	{ lookNice } = iTrackBC.require("util/discordUtils"),
 	{ getWatcherCache, cacheWatcher, files } = iTrackBC.require("data/watcherCache"),
-	{ sleep } = iTrackBC.require('/util/util');
+	{ sleep, getMonday } = iTrackBC.require('/util/util');
 
 interval = iTrackBC.sleep,
 	sendOne = async (channel, data) => channel.discord.send(channel.mention || "", typeof data == "object" ? await lookNice(channel.discord.guild, data) : data),
@@ -32,7 +32,7 @@ interval = iTrackBC.sleep,
 			query: async () => {
 				let codes = await itemCodeList.getJson(),
 					shop = await lists.shop.getJson();
-				shopItems = shop.collection ? shop.collection.map(e => ({ name: e, dateReleased: shop.startDate, code: "Available in the shop", source: "shop" })) : [],
+				shopItems = shop.collection ? shop.collection.map(e => ({ name: e, dateReleased: getMonday(new Date()), code: "Available in the shop", source: "shop" })) : [],
 					roomItems = (await lists.rooms.getJson()).flatMap(room => room.triggers.filter(trigger => trigger.server && trigger.server.grantItem).map(trigger => ({ name: trigger.server.grantItem, code: `Found in ${room.name}`, source: "room" })));
 				return codes.concat(shopItems, roomItems).sort((a, b) => new Date(b.dateReleased) - new Date(a.dateReleased));
 			},
