@@ -20,7 +20,8 @@ const
         }, templates: {
             format: "MMMM D, YYYY",
             history: ({ info, from, to }) =>
-                "|" +
+                "|-" +
+                    "|" +
                     + info ? "|" + info : ""
                         + from ? "|" + moment(from).format(this.format) : ":"
                             + to ? "|" + moment(to).format(this.format) : "''Still available''",
