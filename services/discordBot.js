@@ -126,7 +126,7 @@ client.on("ready", async () => {
 
 let commands = {
 	"ping": {
-		gloabl: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
 			message.channel.send("message created timestamp:" + message.createdTimestamp);
@@ -135,19 +135,19 @@ let commands = {
 		}
 	},
 	"echo": {
-		gloabl: false,
+		global: true,
 		args: ["message"], call: async function (message, args) {
 			message.channel.send(args.join(" "));
 		}
 	},
 	"invite": {
-		gloabl: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 		}
 	},
 	"help": {
-		gloabl: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			let list = await mapAsync(Object.keys(commands), async c => {
 				let description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
@@ -163,7 +163,7 @@ let commands = {
 		}
 	},
 	"lookup": {
-		gloabl: false,
+		global: true,
 		args: ["playerid"], call: async function (message, args) {
 
 			async function invalidError() {
@@ -219,7 +219,7 @@ let commands = {
 		}
 	},
 	"room": {
-		gloabl: false,
+		global: true,
 		args: ["roomid"], call: async function name(message, args) {
 			let roomId = args.join(" ");
 			let room = await getRoom(roomId);
@@ -234,7 +234,7 @@ let commands = {
 		}
 	},
 	"critter": {
-		gloabl: false,
+		global: true,
 		args: ["critterid"], call: async function name(message, args) {
 			let critterId = args.join(" ");
 			let critter = await getCritter(critterId);
@@ -246,7 +246,7 @@ let commands = {
 		}
 	},
 	"item": {
-		gloabl: false,
+		global: true,
 		args: ["itemid"], call: async function name(message, args) {
 			let itemId = args.join(" ");
 			let item = await getItem(itemId);
@@ -258,7 +258,7 @@ let commands = {
 		}
 	},
 	"settings": {
-		gloabl: false,
+		global: true,
 		args: ["key/action", "value"],
 		call: async function (message, args) {
 			let serverId = message.guild.id;
@@ -295,7 +295,7 @@ let commands = {
 		}
 	},
 	"languages": {
-		gloabl: false,
+		global: true,
 		args: [],
 		call: async function (message, args) {
 			let list = await LANG_LIST();
@@ -303,7 +303,7 @@ let commands = {
 		}
 	},
 	"watch": {
-		gloabl: false,
+		global: true,
 		args: ["url", "(mention)", "(showMissed)"],
 		call: async (message, args) => {
 			let url = args[0],
