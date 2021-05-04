@@ -92,11 +92,11 @@ client.on("ready", async () => {
 	//Slash Commands
 	for (const c in commands) {
 		let command = commands[c];
-		if (command.global) return;
+		if (!command.global) return;
 		if (!command.slash) await createSlash(c);
 	}
 
-	for (const guild of client.guilds.cache) {
+	for (const [guildid, guild] of client.guilds.cache) {
 		let guildSettings = await settings.get(guild.id);
 		let getChannel = id => guild.channels.cache.get(id);
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
