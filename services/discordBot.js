@@ -525,4 +525,4 @@ async function initWikiBot() {
 		}
 	});
 }
-//initWikiBot();;;
+initWikiBot();
