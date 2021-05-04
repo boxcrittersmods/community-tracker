@@ -13,7 +13,7 @@ async function addToDB(playerId, nickname) {
 
 }
 
-async function getUsenames() {
+async function getUsernames() {
 	let client = await connect();
 	if (!client) return playerDictionary.map(i => i.nickname);
 	let db = client.db();
@@ -40,5 +40,5 @@ async function getFromDB(nickname) {
 module.exports = {
 	add: addToDB,
 	get: getFromDB,
-	list: getUsenames
+	list: getUsernames
 };

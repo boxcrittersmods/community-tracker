@@ -48,8 +48,8 @@ const
 ===Artwork===
 ===In Game Appearances===
 <gallery captionalign="center">
-${await forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
-`).join("")}</gallery>
+${(await forEachCritter(c => `${c.id} ${item.id}.png|As seen in-game.
+`)).join("")}</gallery>
 
 ==References==
 <references />
@@ -222,7 +222,7 @@ async function updateFreeItem(item) {
 async function forEachCritter(cb) {
     let critters = await lists.critters.getJson();
     let o = [];
-    for (let c of critters) o.push(cb(c));
+    for (let c of critters) o.push(await cb(c));
     return o;
 }
 

@@ -18,6 +18,7 @@
 	"dependencies": {
 		"dblapi.js": "^2.4.1",
 		"discord.js": "^12.5.1",
+		"discord.js-slash-command": "^1.2.1",
 		"dotenv": "^8.2.0",
 		"gif-encoder-2": "^1.0.5",
 		"jsdom": "^16.4.0",

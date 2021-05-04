@@ -1,4 +1,5 @@
 const Discord = require("discord.js"),
+	DiscordSlash = require("discord.js-slash-command"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
 	{ watch, clearWatcher, watchers, watchDiscord } = require("./watcher"),
@@ -10,7 +11,15 @@ const Discord = require("discord.js"),
 
 	settings = iTrackBC.require("data/settings"),
 
-	client = new Discord.Client;
+	client = new Discord.Client,
+	slash = new DiscordSlash.Slash(client);
+
+//Clear Slashes
+slash.get().then((res) => {
+	res.forEach((obj) => {
+		slash.delete(obj.id);
+	});
+});
 
 
 
@@ -19,11 +28,75 @@ function mapAsync(array, func, context) {
 }
 
 
+
+async function addChoices(option, things) {
+	for (const thing of things) {
+		option.addChoice(thing.name || thing.name || thing, thing.id || thing);
+		await sleep(iTrackBC.sleep);
+	}
+}
+
+
+async function createSlash(c, g) {
+	let command = commands[c],
+		cSlash = new DiscordSlash.CommandBuilder();
+	cSlash.setName(c);
+	cSlash.setDescription(await LANG(g, "CMD_" + c.toUpperCase() + "_DESC"));
+
+
+	for (const arg of command.args) {
+		let opt = new DiscordSlash.CommandBuilder();
+		opt.setName(arg);
+		opt.setDescription(await LANG(g, "CMD_" + c.toUpperCase() + "_ARG_" + arg.toUpperCase()));
+		opt.setType(DiscordSlash.CommandType.STRING);
+
+		switch (arg) {
+			case "playerid":
+				let players = await playerDictionary.list();
+				console.log(players[0]);
+				await addChoices(opt, players);
+				break;
+			case "roomid":
+				let rooms = await lists.rooms.getJson();
+				await addChoices(opt, rooms);
+				break;
+			case "itemid":
+				let items = await lists.items.getJson();
+				await addChoices(opt, items);
+				break;
+			case "critterid":
+				let critters = await lists.critters.getJson();
+				await addChoices(opt, critters);
+				break;
+		}
+		opt.setRequired(true);
+		cSlash.addOption(opt);
+
+	}
+
+	command.slash = cSlash;
+	await slash.create(command.slash, g);
+
+
+	return cSlash;
+
+}
+
+
 client.on("ready", async () => {
 	client.user.setPresence({ game: { name: "Box Critters", type: "PLAYING" }, status: "online" });
 	console.log(`Logged in as ${client.user.tag}!`);
 
-	client.guilds.cache.forEach(async guild => {
+
+
+	//Slash Commands
+	for (const c in commands) {
+		let command = commands[c];
+		if (command.global) return;
+		if (!command.slash) await createSlash(c);
+	}
+
+	for (const guild of client.guilds.cache) {
 		let guildSettings = await settings.get(guild.id);
 		let getChannel = id => guild.channels.cache.get(id);
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
@@ -31,21 +104,29 @@ client.on("ready", async () => {
 		);
 
 		//Slash Commands
+		for (const c in commands) {
+			let command = commands[c];
+			if (command.global) return;
+			if (!command.slash) await createSlash(c, guild.id);
+		}
 
-		Object.keys(commands).forEach(async c => {
-			client.api.applications(client.user.id).guilds(guild.id).commands.post({
-				data: {
-					name: c,
-					description: await LANG(guild.id, "CMD_" + c.toUpperCase() + "_DESC")
-				}
-			});
+	}
+
+	client.ws.on("INTERACTION_CREATE", interaction => {
+		client.channels.fetch(interaction.channel_id);
+		client.users.fetch(interaction.member.user.id).then((user) => {
+			let interactions = new InteractionManager(interaction, this.client);
+			interactions.callback = function (callback) {
+				client.api.interactions(interaction.id, interaction.token).callback.post(JSON.parse(`{"data":{"type":3,"data":` + ((typeof (callback) == "object") ? JSON.stringify({ embeds: [callback] }) : JSON.stringify({ content: callback })) + `}}`));
+			};
+			this.emit(Events.SLASH_INTERACTION, interactions);
 		});
-
 	});
 });
 
 let commands = {
 	"ping": {
+		gloabl: false,
 		args: [], call: async function (message, args) {
 			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
 			message.channel.send("message created timestamp:" + message.createdTimestamp);
@@ -54,16 +135,19 @@ let commands = {
 		}
 	},
 	"echo": {
+		gloabl: false,
 		args: ["message"], call: async function (message, args) {
 			message.channel.send(args.join(" "));
 		}
 	},
 	"invite": {
+		gloabl: false,
 		args: [], call: async function (message, args) {
 			message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
 		}
 	},
 	"help": {
+		gloabl: false,
 		args: [], call: async function (message, args) {
 			let list = await mapAsync(Object.keys(commands), async c => {
 				let description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
@@ -79,6 +163,7 @@ let commands = {
 		}
 	},
 	"lookup": {
+		gloabl: false,
 		args: ["playerid"], call: async function (message, args) {
 
 			async function invalidError() {
@@ -134,6 +219,7 @@ let commands = {
 		}
 	},
 	"room": {
+		gloabl: false,
 		args: ["roomid"], call: async function name(message, args) {
 			let roomId = args.join(" ");
 			let room = await getRoom(roomId);
@@ -148,6 +234,7 @@ let commands = {
 		}
 	},
 	"critter": {
+		gloabl: false,
 		args: ["critterid"], call: async function name(message, args) {
 			let critterId = args.join(" ");
 			let critter = await getCritter(critterId);
@@ -159,6 +246,7 @@ let commands = {
 		}
 	},
 	"item": {
+		gloabl: false,
 		args: ["itemid"], call: async function name(message, args) {
 			let itemId = args.join(" ");
 			let item = await getItem(itemId);
@@ -170,7 +258,8 @@ let commands = {
 		}
 	},
 	"settings": {
-		args: ["action", "key", "value"],
+		gloabl: false,
+		args: ["key/action", "value"],
 		call: async function (message, args) {
 			let serverId = message.guild.id;
 			let serverName = message.guild.name;
@@ -206,6 +295,7 @@ let commands = {
 		}
 	},
 	"languages": {
+		gloabl: false,
 		args: [],
 		call: async function (message, args) {
 			let list = await LANG_LIST();
@@ -213,6 +303,7 @@ let commands = {
 		}
 	},
 	"watch": {
+		gloabl: false,
 		args: ["url", "(mention)", "(showMissed)"],
 		call: async (message, args) => {
 			let url = args[0],
@@ -262,9 +353,6 @@ let commands = {
 		}
 	}
 };
-
-
-
 
 
 async function parseCommand(message) {
@@ -331,8 +419,43 @@ client.on('message', message => {
 		return;
 	}
 	if (message.content.toLowerCase().startsWith(iTrackBC.prefix)) {
+		message.reply("Hello World!");
 		parseCommand(message).catch(e => logError(message, e));
 	}
+
+
+});
+
+function slashReply(interaction, data) {
+	console.log(interaction.id, interaction.token);
+	let callback = client.api.interactions(interaction.id, interaction.token).callback;
+	//callback.post(JSON.parse(`{"data":{"type":4,"data":` + ((typeof data == "object") ? JSON.stringify({ embeds: [data] }) : JSON.stringify({ content: data })) + `}}`));
+	callback.post({
+		data: {
+			type: 4,
+			data: {
+				content: data
+			}
+		}
+	});
+}
+
+
+slash.on("slashInteraction", message => {
+	console.log(message);
+
+	//console.log(message.command.options);
+	let content = iTrackBC.prefix + " " + message.command.name;
+	if (message.command.options) content += " " + message.command.options.map(c => c.value).join(" ");
+	//console.log(content);
+	message.content = content;
+	message.guild = message.channel.guild;
+	//slashReply(message, "Hello World!");
+	//message.callback("Recived");
+
+
+	parseCommand(message).catch(e => logError(message, e));
+
 });
 
 
@@ -402,4 +525,4 @@ async function initWikiBot() {
 		}
 	});
 }
-initWikiBot();;;
+//initWikiBot();;;
