@@ -1,65 +1,46 @@
-const fetch = require('node-fetch'),
+const
+	bent = require("bent"),
+	getText = bent("string"),
+	getJSON = bent("json"),
+	getBuffer = bent("buffer"),
 	{ JSDOM } = require("jsdom");
 const { sleep } = require('../util/util');
 
-function Website(body) {
+function Website(url) {
 	if (!new.target) return;
-	if (typeof body === "undefined") {
-		throw new Error("Cannot be called directly");
+	if (url === "undefined") {
+		throw new Error("URL is not defined");
 	}
-	//let w = this;
-	this.body = body;
-	//body.then(body => (w.body = body));
+	this.url = url;
 }
 
-Website.Connect = function (url, body, method = "GET") {
-	if (typeof body == "undefined") {
-		body = async () => {
-			await sleep(iTrackBC.sleep);
-			return await fetch(url);
-		};
-	} else {
-		body = async () => {
-			await sleep(iTrackBC.sleep);
-			return await fetch(url, {
-				method,
-				body: JSON.stringify(body),
-				headers: { 'Content-Type': 'application/json' }
-			});
-		};
-	}
-	let website = new Website(body);
-	website.url = url;
-	website.method = method;
-	return website;
+Website.Connect = function (url, body, method) {
+	if (body) throw new Error("There is use of the body param");
+	if (method) throw new Error("There is use of the method param");
+	return new Website(url);
 };
 
-Website.prototype.getJson = async function () {
-	let json;
+Website.prototype.getText = async function (body = {}, headers = null) {
+	let text = await getText(this.url, body, headers);
+	return text;
+};
+Website.prototype.getJson = async function (body = {}, headers = null) {
+	let json = {};
 	try {
-		let body = await this.body();
-		json = body.json();
-	} catch (error) {
-		//console.error("Website Error: ", error);
-		json = {};
-	}
+		json = await getJSON(this.url, body = {}, headers = null);
+	} catch (e) { console.error(this.url + " " + e.message); }
 	return json;
 };
 
-Website.prototype.getText = async function () {
-	let body = await this.body();
-	return body.text();
-};
 
-Website.prototype.getBuffer = async function () {
-	let body = await this.body();
-	return body.buffer();
+Website.prototype.getBuffer = async function (body = {}, headers = null) {
+	let buffer = await getBuffer(this.url, body, headers);
+	return buffer;
 };
 
 Website.prototype.getDocument = async function () {
-	let { window } = new JSDOM(await this.getText());
-	let document = window.document;
-	return document;
+	let { window } = await JSDOM.fromURL(this.url) || new JSDOM(await this.getText());
+	return window.document;
 };
 
 Website.prototype.getScripts = async function () {

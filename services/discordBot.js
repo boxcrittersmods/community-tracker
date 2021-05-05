@@ -1,84 +1,62 @@
+const { onSlashCommand } = require("../util/discordUtils");
+
 const Discord = require("discord.js"),
 	DiscordSlash = require("discord.js-slash-command"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
 	{ watch, clearWatcher, watchers, watchDiscord } = require("./watcher"),
 	{ getItem, getRoom, getCritter, lists } = iTrackBC.require("query/manifests"),
-	{ lookNice } = iTrackBC.require("util/discordUtils"),
+	{ lookNice, clearSlashCommands, createSlashCommand } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
 	{ getCloseset, sleep } = iTrackBC.require('/util/util'),
 	wikiBot = iTrackBC.require("./services/wikiBot"),
 
 	settings = iTrackBC.require("data/settings"),
 
-	client = new Discord.Client,
-	slash = new DiscordSlash.Slash(client);
-
-//Clear Slashes
-slash.get().then((res) => {
-	res.forEach((obj) => {
-		slash.delete(obj.id);
-	});
-});
-
+	client = new Discord.Client;
 
 
 function mapAsync(array, func, context) {
 	return Promise.all(array.map(func, context));
 }
 
-
-
-async function addChoices(option, things) {
-	for (const thing of things) {
-		option.addChoice(thing.name || thing.name || thing, thing.id || thing);
-		await sleep(iTrackBC.sleep);
-	}
-}
-
-
 async function createSlash(c, g) {
-	let command = commands[c],
-		cSlash = new DiscordSlash.CommandBuilder();
-	cSlash.setName(c);
-	cSlash.setDescription(await LANG(g, "CMD_" + c.toUpperCase() + "_DESC"));
+	let command = commands[c];
+	command.name = c;
+	let slashCmd = Object.assign({}, command);
+	slashCmd.description = await LANG(g, "CMD_" + c.toUpperCase() + "_DESC");
+	delete slashCmd.call;
 
-
-	for (const arg of command.args) {
-		let opt = new DiscordSlash.CommandBuilder();
-		opt.setName(arg);
-		opt.setDescription(await LANG(g, "CMD_" + c.toUpperCase() + "_ARG_" + arg.toUpperCase()));
-		opt.setType(DiscordSlash.CommandType.STRING);
+	slashCmd.options = await Promise.all(slashCmd.args.map(async arg => {
+		let opt = {
+			name: arg,
+			description: await LANG(g, "CMD_" + c.toUpperCase() + "_ARG_" + arg.toUpperCase()),
+			choices: []
+		};
 
 		switch (arg) {
 			case "playerid":
-				let players = await playerDictionary.list();
-				console.log(players[0]);
-				await addChoices(opt, players);
+				opt.choices = (await playerDictionary.list());
+				//console.log(opt.choices);
 				break;
 			case "roomid":
-				let rooms = await lists.rooms.getJson();
-				await addChoices(opt, rooms);
+				opt.choices = (await lists.rooms.getJson()).map(i => ({ name: i.name, value: i.id }));
 				break;
 			case "itemid":
-				let items = await lists.items.getJson();
-				await addChoices(opt, items);
+				opt.choices = (await lists.items.getJson()).map(i => ({ name: i.name, value: i.id }));
 				break;
 			case "critterid":
-				let critters = await lists.critters.getJson();
-				await addChoices(opt, critters);
+				opt.choices = (await lists.critters.getJson()).map(i => ({ name: i.name, value: i.id }));
 				break;
 		}
-		opt.setRequired(true);
-		cSlash.addOption(opt);
+		return opt;
+	}));
+	delete slashCmd.args;
 
-	}
-
-	command.slash = cSlash;
-	await slash.create(command.slash, g);
+	await createSlashCommand(client, g, slashCmd);
 
 
-	return cSlash;
+	return slashCmd;
 
 }
 
@@ -87,67 +65,78 @@ client.on("ready", async () => {
 	client.user.setPresence({ game: { name: "Box Critters", type: "PLAYING" }, status: "online" });
 	console.log(`Logged in as ${client.user.tag}!`);
 
-
-
 	//Slash Commands
-	for (const c in commands) {
+
+	await clearSlashCommands(client);
+	onSlashCommand(client, parseSlashInteraction);
+
+	let globalCommands = Object.keys(commands).filter(c => commands[c].global);
+	console.log(`Initialising ${globalCommands.length} Global Commands:`);
+	for (const c of globalCommands) {
 		let command = commands[c];
-		if (command.global) return;
-		if (!command.slash) await createSlash(c);
+		if (!command.global) return;
+		console.log(c);
+		await createSlash(c);
+		await sleep(iTrackBC.sleep);
 	}
 
-	for (const guild of client.guilds.cache) {
+	console.log(`Initialising Guilds:`);
+	for (const [guildid, guild] of client.guilds.cache) {
 		let guildSettings = await settings.get(guild.id);
+		console.log("Guild: " + guild.name);
 		let getChannel = id => guild.channels.cache.get(id);
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
 			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
 		);
 
 		//Slash Commands
-		for (const c in commands) {
+		await clearSlashCommands(client, guild.id);
+
+		let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
+		console.log(`Initialising ${globalCommands.length} Guild Commands:`);
+		for (const c of guildCommands) {
 			let command = commands[c];
 			if (command.global) return;
-			if (!command.slash) await createSlash(c, guild.id);
-		}
+			console.log(c);
 
+			await createSlash(c, guild.id);
+			await sleep(iTrackBC.sleep);
+		}
+		await sleep(iTrackBC.sleep);
 	}
 
-	client.ws.on("INTERACTION_CREATE", interaction => {
-		client.channels.fetch(interaction.channel_id);
-		client.users.fetch(interaction.member.user.id).then((user) => {
-			let interactions = new InteractionManager(interaction, this.client);
-			interactions.callback = function (callback) {
-				client.api.interactions(interaction.id, interaction.token).callback.post(JSON.parse(`{"data":{"type":3,"data":` + ((typeof (callback) == "object") ? JSON.stringify({ embeds: [callback] }) : JSON.stringify({ content: callback })) + `}}`));
-			};
-			this.emit(Events.SLASH_INTERACTION, interactions);
-		});
-	});
 });
 
 let commands = {
 	"ping": {
-		global: true,
+		global: false,
 		args: [], call: async function (message, args) {
-			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
-			message.channel.send("message created timestamp:" + message.createdTimestamp);
-			message.channel.send("Date.now():" + Date.now());*/
-			message.channel.send(await LANG(message.guild.id, "PING_RESPONSE", { PING: Date.now() - message.createdTimestamp }));
+			/*message.reply("```json\n" + JSON.stringify(message, null, 2) + "```");
+			message.reply("message created timestamp:" + message.createdTimestamp);
+			message.reply("Date.now():" + Date.now());*/
+			message.reply(await LANG(message.guild.id, "PING_RESPONSE", { PING: Date.now() - message.createdTimestamp }));
 		}
 	},
 	"echo": {
-		global: true,
+		global: false,
 		args: ["message"], call: async function (message, args) {
-			message.channel.send(args.join(" "));
+			message.reply(args.join(" "));
 		}
 	},
 	"invite": {
-		global: true,
+		global: false,
 		args: [], call: async function (message, args) {
-			message.channel.send("https://discord.com/oauth2/authorize?client_id=757346990370717837&scope=bot&permissions=68608");
+			let url = "https://discord.com/oauth2/authorize?client_id=" + client.user.id + "&scope=";
+			let scope1 = "bot&permissions=68608",
+				scope2 = "applications.commands";
+			message.reply(
+				"\nCommands Only: " + url + scope2 +
+				"Trackers and commands: " + url + scope1
+			);
 		}
 	},
 	"help": {
-		global: true,
+		global: false,
 		args: [], call: async function (message, args) {
 			let list = await mapAsync(Object.keys(commands), async c => {
 				let description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
@@ -159,18 +148,18 @@ let commands = {
 			});
 			let header = await LANG(message.guild.id, "HELP_HEADER");
 			let footer = await LANG(message.guild.id, "HELP_FOOTER", { LINK: "https://discord.gg/D2ZpRUW" });
-			message.channel.send(header + "\n```" + list.join("\n") + "```\n" + footer);
+			message.reply(header + "\n```" + list.join("\n") + "```\n" + footer);
 		}
 	},
 	"lookup": {
-		global: true,
+		global: false,
 		args: ["playerid"], call: async function (message, args) {
 
 			async function invalidError() {
-				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
+				message.reply(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
 			}
 			async function sendMessageError() {
-				message.channel.send(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
+				message.reply(await LANG(message.guild.id, "LOOKUP_ERROR_SENDMESSAGE"));
 			}
 
 			let
@@ -182,10 +171,10 @@ let commands = {
 			if (similarity.rating > .7) {
 				id = await playerDictionary.get(playerNicknames[similarity.index]);
 				if (similarity.rating == 1) {
-					messageLookupStatus = await message.channel.send(await LANG(message.guild.id, "LOOKUP_100"));
+					messageLookupStatus = await message.reply(await LANG(message.guild.id, "LOOKUP_100"));
 
 				} else {
-					messageLookupStatus = await message.channel.send(await LANG(message.guild.id, "LOOKUP_SIMILAR", {
+					messageLookupStatus = await message.reply(await LANG(message.guild.id, "LOOKUP_SIMILAR", {
 						QUERY: nickname,
 						NICKNAME: similarity.value,
 						SIMILARITY: similarity.rating * 100
@@ -199,14 +188,14 @@ let commands = {
 				let data = await Website.Connect(iTrackBC.bcAPI.players + id).getJson();
 				if (!await playerDictionary.get(data.nickname)) {
 					await playerDictionary.add(id, data.nickname);
-					await message.channel.send(await LANG(message.guild.id, "LOOKUP_SAVED", {
+					await message.reply(await LANG(message.guild.id, "LOOKUP_SAVED", {
 						NICKNAME: data.nickname,
 						ID: id
 					}));
 				}
 				data.critterId = data.critterId || "hamster";
 				try {
-					await message.channel.send(await lookNice(message.guild, data, message.author));
+					await message.reply(await lookNice(message.guild, data, message.author));
 					messageLookupStatus.delete();
 				} catch (e) {
 					sendMessageError(e);
@@ -219,46 +208,46 @@ let commands = {
 		}
 	},
 	"room": {
-		global: true,
+		global: false,
 		args: ["roomid"], call: async function name(message, args) {
 			let roomId = args.join(" ");
 			let room = await getRoom(roomId);
 			if (!room) {
-				message.channel.send(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
+				message.reply(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
 			}
-			await message.channel.send(await lookNice(message.guild, room, message.author));
+			await message.reply(await lookNice(message.guild, room, message.author));
 			if (room.media.music) {
-				await message.channel.send({ files: [room.media.music] });
+				await message.reply({ files: [room.media.music] });
 			}
 		}
 	},
 	"critter": {
-		global: true,
+		global: false,
 		args: ["critterid"], call: async function name(message, args) {
 			let critterId = args.join(" ");
 			let critter = await getCritter(critterId);
 			if (!critter) {
-				message.channel.send(await LANG(message.guild.id, "CRITTER_INVALID", { CRITTER: critter }));
+				message.reply(await LANG(message.guild.id, "CRITTER_INVALID", { CRITTER: critter }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild, critter, message.author));
+			message.reply(await lookNice(message.guild, critter, message.author));
 		}
 	},
 	"item": {
-		global: true,
+		global: false,
 		args: ["itemid"], call: async function name(message, args) {
 			let itemId = args.join(" ");
 			let item = await getItem(itemId);
 			if (!item) {
-				message.channel.send(await LANG(message.guild.id, "ITEM_INVALID", { ITEM: item }));
+				message.reply(await LANG(message.guild.id, "ITEM_INVALID", { ITEM: item }));
 				return;
 			}
-			message.channel.send(await lookNice(message.guild, item, message.author));
+			message.reply(await lookNice(message.guild, item, message.author));
 		}
 	},
 	"settings": {
-		global: true,
+		global: false,
 		args: ["key/action", "value"],
 		call: async function (message, args) {
 			let serverId = message.guild.id;
@@ -269,17 +258,17 @@ let commands = {
 
 			if (key == "reset") {
 				await settings.reset(serverId);
-				message.channel.send(await LANG(message.guild.id, "SETTINGS_RESET", { SERVER: serverName }));
+				message.reply(await LANG(message.guild.id, "SETTINGS_RESET", { SERVER: serverName }));
 			} else if (value) {
-				message.channel.send(await LANG(message.guild.id, "SETTINGS_SET", {
+				message.reply(await LANG(message.guild.id, "SETTINGS_SET", {
 					KEY: "`" + key + "`",
 					OLDVALUE: "`" + currentSettings[key] + "`",
 					NEWVALUE: "`" + value + "`",
 					SERVER: +serverName
 				}));
-				//message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
+				//message.reply(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
 				currentSettings[key] = value;
-				message.channel.send(`${serverName}.\`${key}\`=\`${value}\``);
+				message.reply(`${serverName}.\`${key}\`=\`${value}\``);
 				await settings.set(serverId, currentSettings);
 			}
 
@@ -290,20 +279,20 @@ let commands = {
 			for (let k in currentSettings) {
 				if (!key || k == key) embed.addField(k[0].toUpperCase() + k.substring(1), "```" + JSON.stringify(currentSettings[k], null, 2) + "```");
 			}
-			message.channel.send({ embed });
+			message.reply({ embed });
 
 		}
 	},
 	"languages": {
-		global: true,
+		global: false,
 		args: [],
 		call: async function (message, args) {
 			let list = await LANG_LIST();
-			message.channel.send("`" + list.join("`, `") + "`");
+			message.reply("`" + list.join("`, `") + "`");
 		}
 	},
 	"watch": {
-		global: true,
+		global: false,
 		args: ["url", "(mention)", "(showMissed)"],
 		call: async (message, args) => {
 			let url = args[0],
@@ -315,24 +304,24 @@ let commands = {
 			let id = currentSettings.watchers.findIndex(w => w.channel == message.channel.id);
 			if (!url) {
 				if (id == -1) {
-					message.channel.send("This channel does not have a watcher.");
+					message.reply("This channel does not have a watcher.");
 				} else {
-					message.channel.send(await lookNice(message.guild, currentSettings.watchers[id], message.author));
+					message.reply(await lookNice(message.guild, currentSettings.watchers[id], message.author));
 				}
 				return;
 			}
 			if (url == "debug") {
 				console.log(watchers);
-				message.channel.send("Outputed to console");
-				//message.channel.send("```json\n" + JSON.stringify(watchers, null, 2) + "```");
+				message.reply("Outputed to console");
+				//message.reply("```json\n" + JSON.stringify(watchers, null, 2) + "```");
 				return;
 			}
 			if (url == "types") {
-				message.channel.send("```" + watchers.map(w => `${w.id} (${w.actions.length} watchers)`).join("\n") + "```");
+				message.reply("```" + watchers.map(w => `${w.id} (${w.actions.length} watchers)`).join("\n") + "```");
 				return;
 			} else if (url == "clear") {
 				currentSettings.watchers = currentSettings.watchers.filter(w => w.channel != message.channel.id);
-				message.channel.send(`Watcher for ${message.channel} has been cleared!`);
+				message.reply(`Watcher for ${message.channel} has been cleared!`);
 				await clearWatcher(message.channel);
 			} else {
 				if (id == -1) id = currentSettings.watchers.length;
@@ -356,6 +345,12 @@ let commands = {
 
 
 async function parseCommand(message) {
+	if (void 0 != message.interaction) {
+		message.reply = message.channel.send;
+	} else {
+		message.reply = message.interaction.reply;
+	}
+
 	message.channel.startTyping();
 	let parts = message.content.split(" ");
 	parts.shift();
@@ -373,7 +368,7 @@ async function parseCommand(message) {
 				.setTitle(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TITLE"))
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TEXT", { CHANNEL: channelQuery }));
-			let msg = await message.channel.send({ embed });
+			let msg = await message.reply({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
@@ -388,7 +383,7 @@ async function parseCommand(message) {
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_ROLE_WRONG_TEXT", { ROLE: roleQuery }));
-			let msg = await message.channel.send({ embed });
+			let msg = await message.reply({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
@@ -407,7 +402,6 @@ async function parseCommand(message) {
 async function logError(message = {}, e) {
 	console.log(e);
 	if (!message) return;
-	message.reply = message.reply || message.channel.send;
 	message.reply(await LANG(message.guild.id, "CMD_ERROR", {
 		STACK: e.stack,
 		BOTDEV: "flines#0891"
@@ -419,18 +413,70 @@ client.on('message', message => {
 		return;
 	}
 	if (message.content.toLowerCase().startsWith(iTrackBC.prefix)) {
-		message.reply("Hello World!");
 		parseCommand(message).catch(e => logError(message, e));
 	}
 
 
 });
 
-function slashReply(interaction, data) {
+/*
+{ version: 1,
+  type: 2,
+  token:
+   'aW50ZXJhY3Rpb246ODM5NTMzMzM4NjQ5ODIxMTk1OmxQNW55Qzd4d0syNUwxUDJiNFplaTZzUlVCYWJmbUM1amVyR29yWGhlcER6UjAxeGt1RmsyYUZiSEJJOWdUd2RuSUpGdnJnMU1IZFNGN25jamxmRTRPQ2x6aGJ1TGZXbDlsM1R0eGFXTzFXdG8yVnF0U2lUQzRDNlpzZDRSS216',
+  member:
+   { user:
+	  { username: 'Tumble',
+		public_flags: 0,
+		id: '800774046799102037',
+		discriminator: '9485',
+		avatar: '4f544ae1d8e46814026adffa2ebad3f9' },
+	 roles: [],
+	 premium_since: null,
+	 permissions: '17179869183',
+	 pending: false,
+	 nick: null,
+	 mute: false,
+	 joined_at: '2021-03-06T11:32:42.809000+00:00',
+	 is_pending: false,
+	 deaf: false },
+  id: '839533338649821195',
+  guild_id: '817721351825522718',
+  data:
+   { options: [ [Object] ], name: 'echo', id: '839159909974409237' },
+  channel_id: '817721351825522722',
+  application_id: '817721097171501096' }
+*/
+
+function parseSlashInteraction(interaction) {
+	//console.log(interaction);
+	interaction.reply = slashReply.bind(this, interaction);
+	let guild = client.guilds.cache.get(interaction.guild_id),
+		channel = guild.channels.cache.get(interaction.channel_id),
+		author = client.users.cache.get(interaction.member.user.id),
+		message = {
+			id: interaction.id,
+			interaction,
+			client,
+			author,
+			channel,
+			guild,
+		};
+	console.log(interaction.data.options);
+
+	let content = iTrackBC.prefix + " " + interaction.data.name;
+	if (interaction.data.options) content += " " + interaction.data.options.map(c => c.value).join(" ");
+	message.content = content;
+	console.log(content);
+	parseCommand(message).catch(e => logError(message, e));
+
+}
+
+async function slashReply(interaction, data) {
 	console.log(interaction.id, interaction.token);
 	let callback = client.api.interactions(interaction.id, interaction.token).callback;
 	//callback.post(JSON.parse(`{"data":{"type":4,"data":` + ((typeof data == "object") ? JSON.stringify({ embeds: [data] }) : JSON.stringify({ content: data })) + `}}`));
-	callback.post({
+	await callback.post({
 		data: {
 			type: 4,
 			data: {
@@ -441,7 +487,7 @@ function slashReply(interaction, data) {
 }
 
 
-slash.on("slashInteraction", message => {
+/*slash.on("slashInteraction", message => {
 	console.log(message);
 
 	//console.log(message.command.options);
@@ -456,7 +502,7 @@ slash.on("slashInteraction", message => {
 
 	parseCommand(message).catch(e => logError(message, e));
 
-});
+});*/
 
 
 module.exports = client;

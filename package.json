@@ -16,6 +16,7 @@
 	},
 	"homepage": "https://github.com/tuboxcrittersmods/community-tracker#readme",
 	"dependencies": {
+		"bent": "^7.3.12",
 		"dblapi.js": "^2.4.1",
 		"discord.js": "^12.5.1",
 		"discord.js-slash-command": "^1.2.1",
