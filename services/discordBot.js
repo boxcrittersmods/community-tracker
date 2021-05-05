@@ -467,8 +467,8 @@ function parseSlashInteraction(interaction) {
 	let content = iTrackBC.prefix + " " + interaction.data.name;
 	if (interaction.data.options) content += " " + interaction.data.options.map(c => c.value).join(" ");
 	message.content = content;
-	console.log(content);
-	parseCommand(message).catch(e => logError(message, e));
+	message.reply(content);
+	//parseCommand(message).catch(e => logError(message, e));
 
 }
 
