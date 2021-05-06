@@ -80,6 +80,7 @@ client.on("ready", async () => {
 		await sleep(iTrackBC.sleep);
 	}
 
+
 	console.log(`Initialising Guilds:`);
 	for (const [guildid, guild] of client.guilds.cache) {
 		let guildSettings = await settings.get(guild.id);
@@ -559,4 +560,4 @@ async function initWikiBot() {
 		}
 	});
 }
-//initWikiBot();;;
+initWikiBot();
