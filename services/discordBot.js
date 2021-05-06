@@ -66,9 +66,9 @@ client.on("ready", async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
 
 	//Slash Commands
-
-	await clearSlashCommands(client);
 	onSlashCommand(client, parseSlashInteraction);
+
+	//await clearSlashCommands(client);
 
 	let globalCommands = Object.keys(commands).filter(c => commands[c].global);
 	console.log(`Initialising ${globalCommands.length} Global Commands:`);
@@ -90,7 +90,7 @@ client.on("ready", async () => {
 		);
 
 		//Slash Commands
-		await clearSlashCommands(client, guild.id);
+		//await clearSlashCommands(client, guild.id);
 
 		let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
 		console.log(`Initialising ${globalCommands.length} Guild Commands:`);
@@ -111,9 +111,10 @@ let commands = {
 	"ping": {
 		global: false,
 		args: [], call: async function (message, args) {
-			/*message.reply("```json\n" + JSON.stringify(message, null, 2) + "```");
-			message.reply("message created timestamp:" + message.createdTimestamp);
-			message.reply("Date.now():" + Date.now());*/
+			if (void 0 != message.interaction) return message.reply(await LANG(message.guild.id, "PING_NOT_AVAILABLE"));
+			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
+			message.channel.send("message created timestamp:" + message.createdTimestamp);
+			message.channel.send("Date.now():" + Date.now());*/
 			message.reply(await LANG(message.guild.id, "PING_RESPONSE", { PING: Date.now() - message.createdTimestamp }));
 		}
 	},
@@ -248,7 +249,7 @@ let commands = {
 	},
 	"settings": {
 		global: false,
-		args: ["key/action", "value"],
+		args: ["key", "value"],
 		call: async function (message, args) {
 			let serverId = message.guild.id;
 			let serverName = message.guild.name;
@@ -266,7 +267,7 @@ let commands = {
 					NEWVALUE: "`" + value + "`",
 					SERVER: +serverName
 				}));
-				//message.reply(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
+				//message.channel.send(`Setting the value of \`${key}\` from \`${currentSettings[key]}\` to \`${value}\` for ${serverName}`);
 				currentSettings[key] = value;
 				message.reply(`${serverName}.\`${key}\`=\`${value}\``);
 				await settings.set(serverId, currentSettings);
@@ -293,7 +294,7 @@ let commands = {
 	},
 	"watch": {
 		global: false,
-		args: ["url", "(mention)", "(showMissed)"],
+		args: ["url", "mention", "showMissed"],
 		call: async (message, args) => {
 			let url = args[0],
 				mention = args[1] || "",
@@ -313,7 +314,7 @@ let commands = {
 			if (url == "debug") {
 				console.log(watchers);
 				message.reply("Outputed to console");
-				//message.reply("```json\n" + JSON.stringify(watchers, null, 2) + "```");
+				//message.channel.send("```json\n" + JSON.stringify(watchers, null, 2) + "```");
 				return;
 			}
 			if (url == "types") {
@@ -345,11 +346,9 @@ let commands = {
 
 
 async function parseCommand(message) {
-	if (void 0 != message.interaction) {
-		message.reply = message.channel.send;
-	} else {
-		message.reply = message.interaction.reply;
-	}
+	//if (void 0 == message.interaction) {
+	message.reply = message.channel.send;
+	//}
 
 	message.channel.startTyping();
 	let parts = message.content.split(" ");
@@ -368,7 +367,7 @@ async function parseCommand(message) {
 				.setTitle(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TITLE"))
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_CHANNEL_WRONG_TEXT", { CHANNEL: channelQuery }));
-			let msg = await message.reply({ embed });
+			let msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
@@ -383,7 +382,7 @@ async function parseCommand(message) {
 				.setTitle("You are unautherised to use this command")
 				.setColor(0xff0000)
 				.setDescription(await LANG(message.guild.id, "PERMISSIONS_ROLE_WRONG_TEXT", { ROLE: roleQuery }));
-			let msg = await message.reply({ embed });
+			let msg = await message.channel.send({ embed });
 			setTimeout(() => {
 				msg.delete();
 			}, 3000);
@@ -449,10 +448,10 @@ client.on('message', message => {
 */
 
 function parseSlashInteraction(interaction) {
-	//console.log(interaction);
+	console.log("Recieved Slash Interaction!", interaction);
 	interaction.reply = slashReply.bind(this, interaction);
 	let guild = client.guilds.cache.get(interaction.guild_id),
-		channel = guild.channels.cache.get(interaction.channel_id),
+		channel = client.channels.cache.get(interaction.channel_id),
 		author = client.users.cache.get(interaction.member.user.id),
 		message = {
 			id: interaction.id,
@@ -461,49 +460,38 @@ function parseSlashInteraction(interaction) {
 			author,
 			channel,
 			guild,
+			followup: false
 		};
-	console.log(interaction.data.options);
-
 	let content = iTrackBC.prefix + " " + interaction.data.name;
 	if (interaction.data.options) content += " " + interaction.data.options.map(c => c.value).join(" ");
 	message.content = content;
-	message.reply(content);
-	//parseCommand(message).catch(e => logError(message, e));
+
+	let reply = data => slashReply(message, data);
+	message.reply = reply;
+	console.log(content);
+
+	reply(content);
+
+	parseCommand(message).catch(e => console.error(message, e));
+
+	//reply("1");
+	//reply("2");
+	//reply("3");
 
 }
 
-async function slashReply(interaction, data) {
-	console.log(interaction.id, interaction.token);
-	let callback = client.api.interactions(interaction.id, interaction.token).callback;
-	//callback.post(JSON.parse(`{"data":{"type":4,"data":` + ((typeof data == "object") ? JSON.stringify({ embeds: [data] }) : JSON.stringify({ content: data })) + `}}`));
-	await callback.post({
-		data: {
-			type: 4,
-			data: {
-				content: data
-			}
-		}
-	});
+async function slashReply(message, data) {
+	if (!data) return;
+	let interaction = (message || this).interaction;
+	console.log(interaction);
+	if (message.followup) {
+		new Discord.WebhookClient(client.user.id, interaction.token).send(data);
+	} else {
+		message.followup = true;
+		let callback = client.api.interactions(interaction.id, interaction.token).callback;
+		callback.post(JSON.parse(`{"data":{"type":4,"data":` + ((typeof data == "object") ? JSON.stringify({ embeds: [data] }) : JSON.stringify({ content: data })) + `}}`));
+	}
 }
-
-
-/*slash.on("slashInteraction", message => {
-	console.log(message);
-
-	//console.log(message.command.options);
-	let content = iTrackBC.prefix + " " + message.command.name;
-	if (message.command.options) content += " " + message.command.options.map(c => c.value).join(" ");
-	//console.log(content);
-	message.content = content;
-	message.guild = message.channel.guild;
-	//slashReply(message, "Hello World!");
-	//message.callback("Recived");
-
-
-	parseCommand(message).catch(e => logError(message, e));
-
-});*/
-
 
 module.exports = client;
 

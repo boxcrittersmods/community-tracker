@@ -203,10 +203,10 @@ async function clearSlashCommands(client, guildid) {
 function createParam({ name, description = name, choices = [], required = true }) {
 	let MAX_CHOICES = 10,
 		param = {
-			name, description, required,
+			name: name.replace(/[\W_]+/g, ' '), description: description.replace(/[\W_]+/g, ' '), required,
 			type: 3
 		};
-	if (choices.length < MAX_CHOICES) param.choices = choices.map(c => (typeof c == "object") ? c : { name: c, value: c });;
+	if (choices.length < MAX_CHOICES) param.choices = choices.map(c => (typeof c == "object") ? c : { name: c, value: c });
 	return param;
 }
 
@@ -221,7 +221,7 @@ async function createSlashCommand(client, guildid, { name, description = name, o
 	try {
 		await createSlash(command, data, slashAuth(client));
 	} catch (error) {
-		if (299 < error.statusCode || 200 > error.statusCode) console.error(error);
+		if (299 < error.statusCode || 200 > error.statusCode) console.error("Error Creating Slash Command: ", data);
 	}
 
 	console.log("Created slash command: " + data.name);
