@@ -68,7 +68,7 @@ client.on("ready", async () => {
 	//Slash Commands
 	onSlashCommand(client, parseSlashInteraction);
 
-	//await clearSlashCommands(client);
+	await clearSlashCommands(client);
 
 	let globalCommands = Object.keys(commands).filter(c => commands[c].global);
 	console.log(`Initialising ${globalCommands.length} Global Commands:`);
@@ -91,7 +91,7 @@ client.on("ready", async () => {
 		);
 
 		//Slash Commands
-		//await clearSlashCommands(client, guild.id);
+		await clearSlashCommands(client, guild.id);
 
 		let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
 		console.log(`Initialising ${globalCommands.length} Guild Commands:`);
