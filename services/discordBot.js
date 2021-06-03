@@ -68,9 +68,9 @@ client.on("ready", async () => {
 	//Slash Commands
 	onSlashCommand(client, parseSlashInteraction);
 
-	await clearSlashCommands(client);
+	//await clearSlashCommands(client);
 
-	/*let globalCommands = Object.keys(commands).filter(c => commands[c].global);
+	let globalCommands = Object.keys(commands).filter(c => commands[c].global);
 	console.log(`Initialising ${globalCommands.length} Global Commands:`);
 	for (const c of globalCommands) {
 		let command = commands[c];
@@ -78,8 +78,7 @@ client.on("ready", async () => {
 		console.log(c);
 		await createSlash(c);
 		await sleep(iTrackBC.sleep);
-	}*/
-
+	}
 
 	console.log(`Initialising Guilds:`);
 	for (const [guildid, guild] of client.guilds.cache) {
