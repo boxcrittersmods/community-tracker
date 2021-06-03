@@ -114,7 +114,7 @@ client.on("ready", async () => {
 
 let commands = {
 	"ping": {
-		global: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			if (void 0 != message.interaction) return message.reply(await LANG(message.guild.id, "PING_NOT_AVAILABLE"));
 			/*message.channel.send("```json\n" + JSON.stringify(message, null, 2) + "```");
@@ -124,13 +124,13 @@ let commands = {
 		}
 	},
 	"echo": {
-		global: false,
+		global: true,
 		args: ["message"], call: async function (message, args) {
 			message.reply(args.join(" "));
 		}
 	},
 	"invite": {
-		global: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			let url = "https://discord.com/oauth2/authorize?client_id=" + client.user.id + "&scope=";
 			let scope1 = "bot&permissions=68608",
@@ -142,7 +142,7 @@ let commands = {
 		}
 	},
 	"help": {
-		global: false,
+		global: true,
 		args: [], call: async function (message, args) {
 			let list = await mapAsync(Object.keys(commands), async c => {
 				let description = await LANG(message.guild.id, "CMD_" + c.toUpperCase() + "_DESC");
@@ -158,7 +158,7 @@ let commands = {
 		}
 	},
 	"lookup": {
-		global: false,
+		global: true,
 		args: ["playerid"], call: async function (message, args) {
 			message.reply("Box Critters Player API has moved to somewhere else and we dont know where it is yet. Sorry for any inconvenience this may of caused. (used to be:" + iTrackBC.bcAPI.players + ")");
 			return;
@@ -216,7 +216,7 @@ let commands = {
 		}
 	},
 	"room": {
-		global: false,
+		global: true,
 		args: ["roomid"], call: async function name(message, args) {
 			let roomId = args.join(" ");
 			let room = await getRoom(roomId);
@@ -231,7 +231,7 @@ let commands = {
 		}
 	},
 	"critter": {
-		global: false,
+		global: true,
 		args: ["critterid"], call: async function name(message, args) {
 			let critterId = args.join(" ");
 			let critter = await getCritter(critterId);
@@ -243,7 +243,7 @@ let commands = {
 		}
 	},
 	"item": {
-		global: false,
+		global: true,
 		args: ["itemid"], call: async function name(message, args) {
 			let itemId = args.join(" ");
 			let item = await getItem(itemId);
@@ -255,7 +255,7 @@ let commands = {
 		}
 	},
 	"settings": {
-		global: false,
+		global: true,
 		args: ["key", "value"],
 		call: async function (message, args) {
 			let serverId = message.guild.id;
@@ -292,7 +292,7 @@ let commands = {
 		}
 	},
 	"languages": {
-		global: false,
+		global: true,
 		args: [],
 		call: async function (message, args) {
 			let list = await LANG_LIST();
@@ -300,7 +300,7 @@ let commands = {
 		}
 	},
 	"watch": {
-		global: false,
+		global: true,
 		args: ["url", "mention", "showMissed"],
 		call: async (message, args) => {
 			let url = args[0],
