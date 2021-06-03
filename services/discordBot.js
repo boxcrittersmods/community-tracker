@@ -86,9 +86,9 @@ client.on("ready", async () => {
 		let guildSettings = await settings.get(guild.id);
 		console.log("Guild: " + guild.name);
 		let getChannel = id => guild.channels.cache.get(id);
-		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
+		/*if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
 			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
-		);
+		);*/
 
 		//Slash Commands
 		await clearSlashCommands(client, guild.id);
@@ -156,6 +156,8 @@ let commands = {
 	"lookup": {
 		global: false,
 		args: ["playerid"], call: async function (message, args) {
+			message.reply("Box Critters Player API has moved to somewhere else and we dont know where it is yet. Sorry for any inconvenience this may of caused. (used to be:" + iTrackBC.bcAPI.players + ")");
+			return;
 
 			async function invalidError() {
 				message.reply(await LANG(message.guild.id, "LOOKUP_ERROR_INVALID", { COMMAND: "`world.player.playerId`" }));
@@ -215,7 +217,7 @@ let commands = {
 			let roomId = args.join(" ");
 			let room = await getRoom(roomId);
 			if (!room) {
-				message.reply(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
+				await message.reply(await LANG(message.guild.id, "ROOM_INVALID", { ROOM: room }));
 				return;
 			}
 			await message.reply(await lookNice(message.guild, room, message.author));
@@ -262,7 +264,7 @@ let commands = {
 				await settings.reset(serverId);
 				message.reply(await LANG(message.guild.id, "SETTINGS_RESET", { SERVER: serverName }));
 			} else if (value) {
-				message.reply(await LANG(message.guild.id, "SETTINGS_SET", {
+				message.rerespondply(await LANG(message.guild.id, "SETTINGS_SET", {
 					KEY: "`" + key + "`",
 					OLDVALUE: "`" + currentSettings[key] + "`",
 					NEWVALUE: "`" + value + "`",
@@ -347,9 +349,11 @@ let commands = {
 
 
 async function parseCommand(message) {
-	//if (void 0 == message.interaction) {
-	message.reply = message.channel.send;
-	//}
+
+	//message.reply = message.channel.send.bind(message.channel);
+	/*if (message.interaction) {
+		message.reply = message.interaction.reply.bind(message.interaction);
+	}*/
 
 	message.channel.startTyping();
 	let parts = message.content.split(" ");
@@ -560,4 +564,4 @@ async function initWikiBot() {
 		}
 	});
 }
-initWikiBot();
+if (!process.env.LOCAL) initWikiBot();
