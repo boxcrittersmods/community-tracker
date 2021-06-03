@@ -478,7 +478,7 @@ function parseSlashInteraction(interaction) {
 	message.reply = reply;
 	console.log(content);
 
-	//reply(content);
+	reply(content);
 
 	parseCommand(message).catch(e => console.error(message, e));
 
