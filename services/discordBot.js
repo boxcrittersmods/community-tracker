@@ -96,16 +96,16 @@ client.on("ready", async () => {
 		//Slash Commands
 		await clearSlashCommands(client, guild.id);
 
-		let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
-		console.log(`Initialising ${globalCommands.length} Guild Commands:`);
-		for (const c of guildCommands) {
-			let command = commands[c];
-			if (command.global) return;
-			console.log(c);
+		// let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
+		// console.log(`Initialising ${globalCommands.length} Guild Commands:`);
+		// for (const c of guildCommands) {
+		// 	let command = commands[c];
+		// 	if (command.global) return;
+		// 	console.log(c);
 
-			await createSlash(c, guild.id);
-			await sleep(iTrackBC.sleep);
-		}
+		// 	await createSlash(c, guild.id);
+		// 	await sleep(iTrackBC.sleep);
+		// }
 		await sleep(iTrackBC.sleep);
 	}
 
@@ -478,7 +478,7 @@ function parseSlashInteraction(interaction) {
 	message.reply = reply;
 	console.log(content);
 
-	reply(content);
+	//reply(content);
 
 	parseCommand(message).catch(e => console.error(message, e));
 
