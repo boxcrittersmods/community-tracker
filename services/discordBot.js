@@ -83,6 +83,10 @@ client.on("ready", async () => {
 
 	console.log(`Initialising Guilds:`);
 	for (const [guildid, guild] of client.guilds.cache) {
+		if (guild.id == "535348573341089802") {
+			guild.leave();
+			continue;
+		}
 		let guildSettings = await settings.get(guild.id);
 		console.log("Guild: " + guild.name);
 		let getChannel = id => guild.channels.cache.get(id);
