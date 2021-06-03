@@ -89,23 +89,12 @@ client.on("ready", async () => {
 		let guildSettings = await settings.get(guild.id);
 		console.log("Guild: " + guild.name);
 		let getChannel = id => guild.channels.cache.get(id);
-		/*if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
+		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
 			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
-		);*/
+		);
 
 		//Slash Commands
 		await clearSlashCommands(client, guild.id);
-
-		// let guildCommands = Object.keys(commands).filter(c => !commands[c].global);
-		// console.log(`Initialising ${globalCommands.length} Guild Commands:`);
-		// for (const c of guildCommands) {
-		// 	let command = commands[c];
-		// 	if (command.global) return;
-		// 	console.log(c);
-
-		// 	await createSlash(c, guild.id);
-		// 	await sleep(iTrackBC.sleep);
-		// }
 		await sleep(iTrackBC.sleep);
 	}
 
