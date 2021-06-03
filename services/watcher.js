@@ -105,8 +105,6 @@ async function tick() {
 	setTimeout(tick, interval);
 }
 
-setTimeout(tick, interval);
-
 function diffStr(str1, str2) {
 	let diff = "";
 	str2.split('').forEach(function (val, i) {
@@ -177,4 +175,4 @@ function clearWatcher(id) {
 	}
 }
 
-module.exports = { watchers, watch, watchDiscord, clearWatcher };
+module.exports = { watchers, watch, watchDiscord, clearWatcher, tick };

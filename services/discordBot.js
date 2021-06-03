@@ -4,7 +4,7 @@ const Discord = require("discord.js"),
 	DiscordSlash = require("discord.js-slash-command"),
 	Website = iTrackBC.require("query/website"),
 	{ LANG, LANG_LIST } = iTrackBC.require('query/languages'),
-	{ watch, clearWatcher, watchers, watchDiscord } = require("./watcher"),
+	{ watch, clearWatcher, watchers, watchDiscord, tick: startWatcher } = require("./watcher"),
 	{ getItem, getRoom, getCritter, lists } = iTrackBC.require("query/manifests"),
 	{ lookNice, clearSlashCommands, createSlashCommand } = iTrackBC.require("util/discordUtils"),
 	playerDictionary = iTrackBC.require("data/playerDictionary"),
@@ -94,6 +94,7 @@ client.on("ready", async () => {
 		);
 	}
 
+	startWatcher();
 });
 
 let commands = {
