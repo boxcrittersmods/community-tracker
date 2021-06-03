@@ -92,10 +92,6 @@ client.on("ready", async () => {
 		if (typeof guildSettings !== "undefined") [].forEach.call(guildSettings.watchers || [],
 			watcher => watchDiscord(getChannel(watcher.channel), watcher.url, watcher.mention)
 		);
-
-		//Slash Commands
-		await clearSlashCommands(client, guild.id);
-		await sleep(iTrackBC.sleep);
 	}
 
 });

@@ -78,7 +78,7 @@ async function createMessage(watcher, force) {
 	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
 	//console.log({ now, last, diff, data });
-	cacheWatcher(watcher.id, now);
+	//cacheWatcher(watcher.id, now);
 	watcher.last = now;
 	return data;
 }
