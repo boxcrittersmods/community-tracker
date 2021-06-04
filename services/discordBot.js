@@ -325,7 +325,7 @@ let commands = {
 				};
 				try {
 					await watchDiscord(message.channel, url, mention, first);
-					discordChannel.send(`Watching ${watcher.id} in ${message.channel}.`).then(e => setTimeout(() => e.delete(), 10e3));
+					message.channel.send(`Watching ${watcher.id} in ${message.channel}.`).then(e => setTimeout(() => e.delete(), 10e3));
 				} catch (error) {
 					console.error(error);
 				}
