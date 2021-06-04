@@ -156,7 +156,7 @@ async function watchDiscord(discordChannel, url, mention, first) {
 			discordChannel.send("Sending previous entries").then(e => setTimeout(() => e.delete(), 10e3));
 			//let data = await createMessage(watcher, true);
 			console.log("data", data);
-			await cb(action, data);
+			await cb(data, action);
 		};
 	}
 	let action = watch({
