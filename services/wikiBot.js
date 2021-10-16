@@ -137,6 +137,7 @@ function getWikiPageName(bcObj) {
 
 async function createPage(title, content) {
     title = wikiInfo.pages.prefix + title;
+
     try {
         await bot.create(title, content, "[BOT] Created a new page");
         console.log(`Created Page: "${title}"`);

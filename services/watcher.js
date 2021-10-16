@@ -78,7 +78,9 @@ async function createMessage(watcher, force) {
 	let diff = force ? now : _.filter(now, a => !_.find(last, b => watcher.equality(a, b))),
 		data = await watcher.createMessage(diff, last, now);
 	//console.log({ now, last, diff, data });
-	cacheWatcher(watcher.id, now);
+
+	//cacheWatcher(watcher.id, now);
+	
 	watcher.last = now;
 	return data;
 }
@@ -91,7 +93,7 @@ async function tick() {
 		console.log("WATCHER TICK");
 		for (let watcher of watchers) {
 			if (0 == watcher.actions.length) continue;
-			console.log("Updateing watcher " + watcher.id);
+			console.log("Updating watcher " + watcher.id);
 			let data = await createMessage(watcher);
 			if (void 0 != data && Array.isArray(data) ? data.length > 0 : 1)
 				for (let action of watcher.actions) {
