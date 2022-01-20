@@ -79,7 +79,7 @@ async function createMessage(watcher, force) {
 		data = await watcher.createMessage(diff, last, now);
 	//console.log({ now, last, diff, data });
 
-	//cacheWatcher(watcher.id, now);
+	cacheWatcher(watcher.id, now);
 	
 	watcher.last = now;
 	return data;
