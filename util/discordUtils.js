@@ -23,7 +23,7 @@ function getCritterEmoji(client, critterId) {
 
 async function getWikiUrl(itemId) {
 	let itemName = wikiPages[itemId] || await getItemName(itemId);
-	if (itemName) return "https://box-critters.fandom.com/wiki/" + itemName.split(" ").join("_");
+	if (itemName) return iTrackBC.wiki.fandom+"/wiki/" + itemName.split(" ").join("_");
 }
 
 

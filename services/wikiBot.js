@@ -98,7 +98,7 @@ ${(await forEachCritter(c => `${c.id} ${item.id}.png|As seen on a ${c.name} in-g
         }
     },
     bot = new mwn({
-        apiUrl: "https://box-critters.fandom.com/api.php",
+        apiUrl: iTrackBC.wiki.fandom+"/api.php",
         username: iTrackBC.token.wiki.user,
         password: iTrackBC.token.wiki.pass,
         userAgent: 'boxCrittersWikiBot 0.1 (indev) - Send Bug Reports to: https://discord.gg/mbTSD4yPee',
@@ -132,7 +132,7 @@ async function login() {
 
 
 function getWikiPageName(bcObj) {
-    return bcObj.wiki ? path.basename(bcObj.wiki) : bcObj.name || bcObj.id;
+    return bcObj.wiki ? bcObj.wiki.replace(iTrackBC.wiki.fandom+"/wiki/","") : bcObj.name || bcObj.id;
 }
 
 async function createPage(title, content) {

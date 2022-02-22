@@ -21,6 +21,9 @@ const path = require("path"),
             url: "playerdictionary.mftw9.mongodb.net/lookupBot"
         },
         prefix: process.env.LOCAL ? "!test" : "!bc",
+        wiki:{
+            fandom:"https://box-critters.fandom.com"
+        },
         wikiPages: require("./wikiPages.json"),
         bcAPI: {
             players: "https://base.boxcritters.com/data/players.json?id="
