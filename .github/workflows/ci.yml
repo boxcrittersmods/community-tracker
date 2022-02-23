@@ -1,0 +1,27 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI/CD
+        
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    
+jobs:
+  deploy:
+        name: Deploy to Caprover
+        runs-on: ubuntu-latest
+        environment: Release
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+            - name: 'Install caprover-cli'
+              run: npm install -g caprover
+            - name: 'Deploy'
+              env:
+                  CAPROVER_URL: ${{ secrets.CAPROVER_URL }}
+                  CAPROVER_APP: itrackbc-js
+                  CAPROVER_BRANCH: master
+                  CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_TOKEN_BASHLEY }}
+              run: 'caprover deploy --appToken $CAPROVER_APP_TOKEN --caproverUrl $CAPROVER_URL --appName $CAPROVER_APP --branch $CAPROVER_BRANCH'
