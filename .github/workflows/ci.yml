@@ -12,7 +12,7 @@ jobs:
   deploy:
         name: Deploy to Caprover
         runs-on: ubuntu-latest
-        environment: Release
+        environment: tumble-community-tracker
         steps:
             - name: Checkout
               uses: actions/checkout@v2
