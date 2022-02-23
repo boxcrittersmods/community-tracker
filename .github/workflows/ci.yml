@@ -23,5 +23,5 @@ jobs:
                   CAPROVER_URL: ${{ secrets.CAPROVER_URL }}
                   CAPROVER_APP: itrackbc-js
                   CAPROVER_BRANCH: master
-                  CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_TOKEN_BASHLEY }}
+                  CAPROVER_APP_TOKEN: ${{ secrets.CAPROVER_TOKEN }}
               run: 'caprover deploy --appToken $CAPROVER_APP_TOKEN --caproverUrl $CAPROVER_URL --appName $CAPROVER_APP --branch $CAPROVER_BRANCH'
