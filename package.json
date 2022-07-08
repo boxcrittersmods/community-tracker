@@ -26,7 +26,7 @@
 		"jsdom": "^16.4.0",
 		"lodash": "^4.17.20",
 		"lodash.isequal": "^4.5.0",
-		"moment": "^2.29.1",
+		"moment": "^2.29.4",
 		"mongodb": "^3.6.2",
 		"mwn": "^0.10.4",
 		"node-fetch": "^2.6.7",
